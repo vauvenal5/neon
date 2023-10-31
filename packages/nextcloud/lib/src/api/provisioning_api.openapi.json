@@ -330,8 +330,6 @@
                     "backend",
                     "backendCapabilities",
                     "biography",
-                    "display-name",
-                    "displayname",
                     "email",
                     "fediverse",
                     "groups",

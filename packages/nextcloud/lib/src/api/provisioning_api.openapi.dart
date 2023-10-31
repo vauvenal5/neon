@@ -6128,8 +6128,8 @@ abstract interface class UserDetailsInterface {
   String get biography;
   String? get biographyScope;
   @BuiltValueField(wireName: 'display-name')
-  String get displayName;
-  String get displayname;
+  String? get displayName;
+  String? get displayname;
   String? get displaynameScope;
   String? get email;
   String? get emailScope;

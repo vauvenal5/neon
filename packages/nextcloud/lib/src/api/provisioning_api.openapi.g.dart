@@ -2391,10 +2391,6 @@ class _$UserDetailsSerializer implements StructuredSerializer<UserDetails> {
       serializers.serialize(object.backendCapabilities, specifiedType: const FullType(UserDetails_BackendCapabilities)),
       'biography',
       serializers.serialize(object.biography, specifiedType: const FullType(String)),
-      'display-name',
-      serializers.serialize(object.displayName, specifiedType: const FullType(String)),
-      'displayname',
-      serializers.serialize(object.displayname, specifiedType: const FullType(String)),
       'fediverse',
       serializers.serialize(object.fediverse, specifiedType: const FullType(String)),
       'groups',
@@ -2451,6 +2447,18 @@ class _$UserDetailsSerializer implements StructuredSerializer<UserDetails> {
     if (value != null) {
       result
         ..add('biographyScope')
+        ..add(serializers.serialize(value, specifiedType: const FullType(String)));
+    }
+    value = object.displayName;
+    if (value != null) {
+      result
+        ..add('display-name')
+        ..add(serializers.serialize(value, specifiedType: const FullType(String)));
+    }
+    value = object.displayname;
+    if (value != null) {
+      result
+        ..add('displayname')
         ..add(serializers.serialize(value, specifiedType: const FullType(String)));
     }
     value = object.displaynameScope;
@@ -2582,10 +2590,10 @@ class _$UserDetailsSerializer implements StructuredSerializer<UserDetails> {
           result.biographyScope = serializers.deserialize(value, specifiedType: const FullType(String)) as String?;
           break;
         case 'display-name':
-          result.displayName = serializers.deserialize(value, specifiedType: const FullType(String))! as String;
+          result.displayName = serializers.deserialize(value, specifiedType: const FullType(String)) as String?;
           break;
         case 'displayname':
-          result.displayname = serializers.deserialize(value, specifiedType: const FullType(String))! as String;
+          result.displayname = serializers.deserialize(value, specifiedType: const FullType(String)) as String?;
           break;
         case 'displaynameScope':
           result.displaynameScope = serializers.deserialize(value, specifiedType: const FullType(String)) as String?;
@@ -11916,9 +11924,9 @@ class _$UserDetails extends UserDetails {
   @override
   final String? biographyScope;
   @override
-  final String displayName;
+  final String? displayName;
   @override
-  final String displayname;
+  final String? displayname;
   @override
   final String? displaynameScope;
   @override
@@ -11993,8 +12001,8 @@ class _$UserDetails extends UserDetails {
       required this.backendCapabilities,
       required this.biography,
       this.biographyScope,
-      required this.displayName,
-      required this.displayname,
+      this.displayName,
+      this.displayname,
       this.displaynameScope,
       this.email,
       this.emailScope,
@@ -12031,8 +12039,6 @@ class _$UserDetails extends UserDetails {
     BuiltValueNullFieldError.checkNotNull(backend, r'UserDetails', 'backend');
     BuiltValueNullFieldError.checkNotNull(backendCapabilities, r'UserDetails', 'backendCapabilities');
     BuiltValueNullFieldError.checkNotNull(biography, r'UserDetails', 'biography');
-    BuiltValueNullFieldError.checkNotNull(displayName, r'UserDetails', 'displayName');
-    BuiltValueNullFieldError.checkNotNull(displayname, r'UserDetails', 'displayname');
     BuiltValueNullFieldError.checkNotNull(fediverse, r'UserDetails', 'fediverse');
     BuiltValueNullFieldError.checkNotNull(groups, r'UserDetails', 'groups');
     BuiltValueNullFieldError.checkNotNull(headline, r'UserDetails', 'headline');
@@ -12449,8 +12455,8 @@ class UserDetailsBuilder implements Builder<UserDetails, UserDetailsBuilder>, Us
               backendCapabilities: backendCapabilities.build(),
               biography: BuiltValueNullFieldError.checkNotNull(biography, r'UserDetails', 'biography'),
               biographyScope: biographyScope,
-              displayName: BuiltValueNullFieldError.checkNotNull(displayName, r'UserDetails', 'displayName'),
-              displayname: BuiltValueNullFieldError.checkNotNull(displayname, r'UserDetails', 'displayname'),
+              displayName: displayName,
+              displayname: displayname,
               displaynameScope: displaynameScope,
               email: email,
               emailScope: emailScope,
