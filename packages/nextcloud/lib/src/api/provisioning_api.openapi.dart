@@ -6143,7 +6143,7 @@ abstract interface class UserDetailsInterface {
   String get language;
   int get lastLogin;
   String get locale;
-  String get manager;
+  String? get manager;
   @BuiltValueField(wireName: 'notify_email')
   String? get notifyEmail;
   String get organisation;

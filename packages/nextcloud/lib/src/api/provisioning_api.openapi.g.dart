@@ -2405,8 +2405,6 @@ class _$UserDetailsSerializer implements StructuredSerializer<UserDetails> {
       serializers.serialize(object.lastLogin, specifiedType: const FullType(int)),
       'locale',
       serializers.serialize(object.locale, specifiedType: const FullType(String)),
-      'manager',
-      serializers.serialize(object.manager, specifiedType: const FullType(String)),
       'organisation',
       serializers.serialize(object.organisation, specifiedType: const FullType(String)),
       'phone',
@@ -2495,6 +2493,12 @@ class _$UserDetailsSerializer implements StructuredSerializer<UserDetails> {
     if (value != null) {
       result
         ..add('headlineScope')
+        ..add(serializers.serialize(value, specifiedType: const FullType(String)));
+    }
+    value = object.manager;
+    if (value != null) {
+      result
+        ..add('manager')
         ..add(serializers.serialize(value, specifiedType: const FullType(String)));
     }
     value = object.notifyEmail;
@@ -2636,7 +2640,7 @@ class _$UserDetailsSerializer implements StructuredSerializer<UserDetails> {
           result.locale = serializers.deserialize(value, specifiedType: const FullType(String))! as String;
           break;
         case 'manager':
-          result.manager = serializers.deserialize(value, specifiedType: const FullType(String))! as String;
+          result.manager = serializers.deserialize(value, specifiedType: const FullType(String)) as String?;
           break;
         case 'notify_email':
           result.notifyEmail = serializers.deserialize(value, specifiedType: const FullType(String)) as String?;
@@ -11954,7 +11958,7 @@ class _$UserDetails extends UserDetails {
   @override
   final String locale;
   @override
-  final String manager;
+  final String? manager;
   @override
   final String? notifyEmail;
   @override
@@ -12016,7 +12020,7 @@ class _$UserDetails extends UserDetails {
       required this.language,
       required this.lastLogin,
       required this.locale,
-      required this.manager,
+      this.manager,
       this.notifyEmail,
       required this.organisation,
       this.organisationScope,
@@ -12046,7 +12050,6 @@ class _$UserDetails extends UserDetails {
     BuiltValueNullFieldError.checkNotNull(language, r'UserDetails', 'language');
     BuiltValueNullFieldError.checkNotNull(lastLogin, r'UserDetails', 'lastLogin');
     BuiltValueNullFieldError.checkNotNull(locale, r'UserDetails', 'locale');
-    BuiltValueNullFieldError.checkNotNull(manager, r'UserDetails', 'manager');
     BuiltValueNullFieldError.checkNotNull(organisation, r'UserDetails', 'organisation');
     BuiltValueNullFieldError.checkNotNull(phone, r'UserDetails', 'phone');
     BuiltValueNullFieldError.checkNotNull(profileEnabled, r'UserDetails', 'profileEnabled');
@@ -12470,7 +12473,7 @@ class UserDetailsBuilder implements Builder<UserDetails, UserDetailsBuilder>, Us
               language: BuiltValueNullFieldError.checkNotNull(language, r'UserDetails', 'language'),
               lastLogin: BuiltValueNullFieldError.checkNotNull(lastLogin, r'UserDetails', 'lastLogin'),
               locale: BuiltValueNullFieldError.checkNotNull(locale, r'UserDetails', 'locale'),
-              manager: BuiltValueNullFieldError.checkNotNull(manager, r'UserDetails', 'manager'),
+              manager: manager,
               notifyEmail: notifyEmail,
               organisation: BuiltValueNullFieldError.checkNotNull(organisation, r'UserDetails', 'organisation'),
               organisationScope: organisationScope,
