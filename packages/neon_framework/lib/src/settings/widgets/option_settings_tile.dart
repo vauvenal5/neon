@@ -1,10 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
+import 'package:neon_framework/models.dart';
 import 'package:neon_framework/settings.dart';
+import 'package:neon_framework/src/blocs/apps.dart';
 import 'package:neon_framework/src/settings/models/option.dart';
 import 'package:neon_framework/src/settings/widgets/settings_tile.dart';
 import 'package:neon_framework/src/theme/dialog.dart';
+import 'package:neon_framework/src/utils/app_capability_extension.dart';
 import 'package:neon_framework/src/widgets/adaptive_widgets/list_tile.dart';
 import 'package:neon_framework/utils.dart';
 
@@ -20,6 +23,7 @@ class OptionSettingsTile extends InputSettingsTile {
     return switch (option) {
       ToggleOption() => ToggleSettingsTile(option: option as ToggleOption),
       SelectOption() => SelectSettingsTile(option: option as SelectOption),
+      PathUriOption() => PathUriSettingsTile(option: option as PathUriOption),
     };
   }
 }
@@ -237,6 +241,35 @@ class SelectSettingsTileScreen<T> extends StatelessWidget {
           child: selector,
         ),
       ),
+    );
+  }
+}
+
+@internal
+class PathUriSettingsTile extends InputSettingsTile<PathUriOption> {
+  const PathUriSettingsTile({
+    required super.option,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final appsBloc = NeonProvider.of<AppsBloc>(context);
+    return ValueListenableBuilder(
+      valueListenable: option,
+      builder: (context, value, child) => AdaptiveListTile.additionalInfo(
+        enabled: option.enabled,
+        title: child!,
+        additionalInfo: Text(value.toString()),
+        onTap: () async {
+          final capability = await appsBloc.handleAppCapability(context, DirectorySelectionCapability(option.value));
+          
+          if (capability?.result != null) {
+            option.value = capability!.result!;
+          }
+        },
+      ),
+      child: Text(option.label(context)),
     );
   }
 }
