@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:meta/meta.dart';
 import 'package:nextcloud/nextcloud.dart';
 import 'package:nextcloud/webdav.dart' as webdav;
+import 'package:rxdart/rxdart.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:universal_io/io.dart';
 
@@ -13,12 +14,15 @@ sealed class FilesTask {
   });
 
   final webdav.PathUri uri;
+  Future<void>? result;
 
   @protected
-  final progressController = StreamController<double>();
+  final progressController = BehaviorSubject<double>();
 
   /// Task progress in percent `[0, 1]`.
-  late final progress = progressController.stream.asBroadcastStream();
+  late final progress = progressController.stream;
+
+  Future<void> execute(NextcloudClient client) async {}
 }
 
 sealed class FilesDownloadTask extends FilesTask {
@@ -53,7 +57,7 @@ sealed class FilesTaskMemory extends FilesTask {
     required super.uri,
   });
 
-  final _stream = StreamController<List<int>>();
+  final _stream = ReplaySubject<List<int>>();
 
   Stream<List<int>> get stream => _stream.stream;
 
@@ -66,6 +70,7 @@ class FilesDownloadTaskIO extends FilesTaskIO implements FilesDownloadTask {
     required super.file,
   });
 
+  @override
   Future<void> execute(NextcloudClient client) async {
     await client.webdav.getFile(
       uri,
@@ -90,6 +95,7 @@ class FilesUploadTaskIO extends FilesTaskIO implements FilesUploadTask {
   @override
   late tz.TZDateTime lastModified = tz.TZDateTime.from(_stat.modified, tz.UTC);
 
+  @override
   Future<void> execute(NextcloudClient client) async {
     await client.webdav.putFile(
       file,
@@ -107,6 +113,7 @@ class FilesDownloadTaskMemory extends FilesTaskMemory implements FilesDownloadTa
     required super.uri,
   });
 
+  @override
   Future<void> execute(NextcloudClient client) async {
     final stream = await client.webdav.getStream(
       uri,
@@ -133,6 +140,7 @@ class FilesUploadTaskMemory extends FilesTaskMemory implements FilesUploadTask {
   @override
   final tz.TZDateTime? lastModified;
 
+  @override
   Future<void> execute(NextcloudClient client) async {
     await client.webdav.putStream(
       _stream.stream,
