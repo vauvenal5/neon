@@ -23,6 +23,7 @@ class FilesBrowserView extends StatefulWidget {
     required this.uri,
     required this.mode,
     required this.setPath,
+    this.mimeFilter = const MimeFilter.files(),
     this.hideUri,
   }) : super(key: Key(uri.toString()));
 
@@ -31,6 +32,7 @@ class FilesBrowserView extends StatefulWidget {
   final FilesBrowserMode mode;
   final void Function(webdav.PathUri uri) setPath;
   final webdav.PathUri? hideUri;
+  final MimeFilter mimeFilter;
 
   @override
   State<FilesBrowserView> createState() => _FilesBrowserViewState();
@@ -52,6 +54,7 @@ class _FilesBrowserViewState extends State<FilesBrowserView> {
       uri: widget.uri,
       mode: widget.mode,
       hideUri: widget.hideUri,
+      mimeFilter: widget.mimeFilter,
     );
 
     errorsSubscription = bloc.errors.listen((error) {
