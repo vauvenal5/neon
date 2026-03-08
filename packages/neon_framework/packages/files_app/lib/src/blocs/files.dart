@@ -32,7 +32,7 @@ sealed class FilesBloc implements InteractiveBloc {
 
   void openFile(webdav.PathUri uri, String etag, String? mimeType);
 
-  void shareFileNative(webdav.PathUri uri, String etag, String? mimeType);
+  void shareFileNative(webdav.PathUri uri, String etag, String? mimeType, {bool attach});
 
   void delete(webdav.PathUri uri);
 
@@ -216,12 +216,12 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
   }
 
   @override
-  Future<void> shareFileNative(webdav.PathUri uri, String etag, String? mimeType) async {
+  Future<void> shareFileNative(webdav.PathUri uri, String etag, String? mimeType, {bool attach = false}) async {
     await wrapAction(
       () async {
         if (NeonPlatform.instance.canUsePaths) {
           final file = await cacheFile(uri, etag);
-          await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
+          await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], attach: attach));
         } else {
           throw UnimplementedError('Sharing is not supported on web');
         }
