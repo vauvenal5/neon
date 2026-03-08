@@ -61,6 +61,7 @@ class _ImagePageState extends State<ImagePage> {
       appBar: _showAppBar
           ? AppBar(
               title: Text(_files[_currentIndex].name),
+              actions: [FileActions(details: FileDetails.fromWebDav(file: _files[_currentIndex]))],
             )
           : null,
       body: GestureDetector(
