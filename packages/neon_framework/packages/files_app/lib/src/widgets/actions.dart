@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:files_app/l10n/localizations.dart';
 import 'package:files_app/src/blocs/files.dart';
 import 'package:files_app/src/models/file_details.dart';
@@ -21,6 +23,8 @@ class FileActions extends StatelessWidget {
     switch (action) {
       case FilesFileAction.share:
         bloc.shareFileNative(details.uri, details.etag!, details.mimeType);
+      case FilesFileAction.attach:
+        bloc.shareFileNative(details.uri, details.etag!, details.mimeType, attach: true);
       case FilesFileAction.toggleFavorite:
         if (details.isFavorite ?? false) {
           bloc.removeFavorite(details.uri);
@@ -88,6 +92,11 @@ class FileActions extends StatelessWidget {
             value: FilesFileAction.share,
             child: Text(FilesLocalizations.of(context).actionShare),
           ),
+        if (!details.isDirectory && NeonPlatform.instance.canUseSharing && Platform.isAndroid)
+          PopupMenuItem(
+            value: FilesFileAction.attach,
+            child: Text(FilesLocalizations.of(context).actionAttach),
+          ),
         if (details.isFavorite != null)
           PopupMenuItem(
             value: FilesFileAction.toggleFavorite,
@@ -125,6 +134,7 @@ class FileActions extends StatelessWidget {
 
 enum FilesFileAction {
   share,
+  attach,
   toggleFavorite,
   details,
   rename,
