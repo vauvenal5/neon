@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'localizations.dart';
 
 // ignore_for_file: type=lint
@@ -20,6 +22,9 @@ class FilesLocalizationsEn extends FilesLocalizations {
 
   @override
   String get actionShare => 'Share';
+
+  @override
+  String get actionAttach => 'Use as';
 
   @override
   String get errorUnableToOpenFile => 'Unable to open the file';

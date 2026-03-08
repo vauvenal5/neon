@@ -24,7 +24,11 @@ dependencies:
     path: ../..
   nextcloud: ^8.1.0
   rxdart: ^0.28.0
-  share_plus: ^11.0.0
+  share_plus:
+    git:
+      url: https://github.com/vauvenal5/plus_plugins
+      path: packages/share_plus/share_plus
+      ref: feat/action_attach_data
   timezone: ^0.10.1
   wakelock_plus: ^1.0.0
   webview_flutter: ^4.0.0
