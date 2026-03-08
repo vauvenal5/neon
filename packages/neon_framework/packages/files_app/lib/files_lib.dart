@@ -9,4 +9,5 @@ export 'package:files_app/src/models/file_details.dart';
 export 'package:files_app/src/options.dart';
 export 'package:files_app/src/sort/files.dart';
 export 'package:files_app/src/utils/dialog.dart' show showDownloadConfirmationDialog;
+export 'package:files_app/src/widgets/actions.dart';
 export 'package:files_app/src/widgets/file_preview.dart';
