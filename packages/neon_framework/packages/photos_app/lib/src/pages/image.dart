@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:files_app/files_lib.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:neon_framework/utils.dart';
 import 'package:nextcloud/webdav.dart' as webdav;
 import 'package:photo_view/photo_view.dart';
@@ -95,10 +96,21 @@ class _ImagePageState extends State<ImagePage> {
                       imageProvider: NeonImageProvider(file: file, bloc: bloc, options: options),
                     );
                   },
-                  loadingBuilder: (context, event) => Center(
-                    child: CircularProgressIndicator(
-                      value: event?.cumulativeBytesLoaded != null ? event!.cumulativeBytesLoaded.toDouble() / event.expectedTotalBytes! : null,
-                    ),
+                  loadingBuilder: (context, event) => Stack(
+                    children: [
+                      if (_files[_currentIndex].blurHash != null)
+                        BlurHash(
+                          hash: _files[_currentIndex].blurHash!,
+                          imageFit: BoxFit.contain,
+                        ),
+                      Center(
+                        child: CircularProgressIndicator(
+                          value: event?.cumulativeBytesLoaded != null
+                              ? event!.cumulativeBytesLoaded.toDouble() / event.expectedTotalBytes!
+                              : null,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 ..._buildDesktopButtons(context),
@@ -153,7 +165,7 @@ class _ImagePageState extends State<ImagePage> {
   Widget _buildDesktopNavButton({
     required BuildContext context,
     required Widget child,
-    required Function() onPressed,
+    required void Function() onPressed,
     required Alignment alignment,
     required LogicalKeyboardKey key,
   }) {

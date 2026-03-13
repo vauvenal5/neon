@@ -30,6 +30,7 @@ sealed class FilesBrowserBloc implements InteractiveBloc {
     required FilesBrowserMode mode,
     required MimeFilter mimeFilter,
     webdav.PathUri? hideUri,
+    bool recursive,
   }) = _FilesBrowserBloc;
 
   BehaviorSubject<Result<BuiltList<webdav.WebDavFile>>> get files;
@@ -47,6 +48,7 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
     required this.mode,
     required this.mimeFilter,
     this.hideUri,
+    this.recursive = false,
   }) {
     options.showHiddenFilesOption.addListener(refresh);
 
@@ -67,6 +69,7 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
   @override
   final FilesBrowserMode mode;
   final webdav.PathUri? hideUri;
+  final bool recursive;
 
   @override
   void dispose() {
@@ -95,7 +98,7 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
           ocSize: true,
           ocFavorite: true,
         ),
-        depth: webdav.WebDavDepth.one,
+        depth: recursive ? webdav.WebDavDepth.infinity : webdav.WebDavDepth.one,
       ),
       converter: const webdav.WebDavResponseConverter(),
       unwrap: (response) => BuiltList<webdav.WebDavFile>.build((b) {

@@ -12,6 +12,7 @@ dependencies:
     path: ../files_app
   flutter:
     sdk: flutter
+  flutter_blurhash: ^0.9.0
   flutter_localizations:
     sdk: flutter
   flutter_sticky_header: ^0.8.0
