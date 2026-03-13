@@ -63,14 +63,19 @@ class CategoryView extends StatefulWidget {
 class _CategoryViewState extends State<CategoryView> {
   late final FilesBloc filesBloc;
   late final FilesOptions options;
+  late final BlurBloc blurBloc;
   late final FilesBrowserBloc bloc;
   late final StreamSubscription<Object> errorsSubscription;
   late final StickyHeaderController controller;
+
+  int axis = 1;
+  double width = 1;
 
   @override
   void initState() {
     filesBloc = NeonProvider.of<FilesBloc>(context);
     options = NeonProvider.of<FilesOptions>(context);
+    blurBloc = NeonProvider.of<BlurBloc>(context);
 
     controller = StickyHeaderController();
 
@@ -80,7 +85,9 @@ class _CategoryViewState extends State<CategoryView> {
       account: NeonProvider.of<Account>(context),
       uri: widget.uri,
       mode: FilesBrowserMode.browser,
+      blurBloc: blurBloc,
       mimeFilter: widget.mimeFilter,
+      loadFiles: false,
     );
 
     errorsSubscription = bloc.errors.listen((error) {
@@ -90,6 +97,23 @@ class _CategoryViewState extends State<CategoryView> {
     });
 
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    const cut = 550;
+    const minAxis = 3;
+    final realdWidth = MediaQuery.sizeOf(context).width - 8;
+    final newAxis = minAxis + minAxis * ((realdWidth - cut) ~/ cut);
+    final newWidth = (realdWidth / newAxis) - 4;
+
+    if (newAxis != axis && newWidth != width) {
+      axis = newAxis;
+      width = newWidth;
+      unawaited(bloc.updateSize(Size.square(width)));
+    }
+
+    super.didChangeDependencies();
   }
 
   @override
@@ -149,13 +173,6 @@ class _CategoryViewState extends State<CategoryView> {
     List<webdav.WebDavFile> sorted,
     BuildContext context,
   ) {
-    final cut = 550;
-    final minAxis = 3;
-    double realdWidth = MediaQuery.sizeOf(context).width - 8;
-    final axis = minAxis + minAxis * ((realdWidth - cut) ~/ cut);
-
-    double width = (realdWidth / axis) - 4;
-
     return SliverStickyHeader(
       key: ValueKey(key),
       header: _buildHeader(key, context),

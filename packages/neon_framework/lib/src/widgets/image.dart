@@ -1,16 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:meta/meta.dart';
 import 'package:neon_framework/models.dart';
 import 'package:neon_framework/src/bloc/result.dart';
+import 'package:neon_framework/src/blocs/blur.dart';
 import 'package:neon_framework/src/utils/account_client_extension.dart';
 import 'package:neon_framework/src/utils/image_utils.dart';
+import 'package:neon_framework/src/utils/provider.dart';
 import 'package:neon_framework/src/utils/request_manager.dart';
 import 'package:neon_framework/src/widgets/error.dart';
 import 'package:neon_framework/src/widgets/linear_progress_indicator.dart';
@@ -88,6 +90,8 @@ class NeonImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final blurBloc = NeonProvider.of<BlurBloc>(context);
+
     return ResultBuilder.behaviorSubject(
       subject: image,
       builder: (context, imageResult) {
@@ -118,22 +122,24 @@ class NeonImage extends StatelessWidget {
           );
         }
 
-        if (blurHash != null) {
-          return BlurHash(
-            hash: blurHash!,
-            imageFit: fit ?? BoxFit.cover,
-            decodingHeight: size?.height.toInt() ?? 32,
-            decodingWidth: size?.width.toInt() ?? 32,
-          );
-        }
-
         if (imageResult.hasError) {
           return _buildError(context, imageResult.error);
         }
 
-        return SizedBox(
-          width: size?.width,
-          child: const NeonLinearProgressIndicator(),
+        return FutureBuilder<ui.Image>(
+          // we are not caching the blurHash result because we do not want to take care of cleanup in here
+          // if precaching is required, the encapsulating widget should take care of it and also of the cleanup
+          future: blurBloc.getBlurHash(blurHash, size ?? const Size.square(32), cache: false,),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return RawImage(image: snapshot.data,);
+            }
+
+            return SizedBox(
+              width: size?.width,
+              child: const NeonLinearProgressIndicator(),
+            );
+          },
         );
       },
     );

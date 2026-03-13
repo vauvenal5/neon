@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:neon_framework/blocs.dart';
 import 'package:neon_framework/models.dart';
 import 'package:neon_framework/sort_box.dart';
+import 'package:neon_framework/theme.dart';
 import 'package:neon_framework/utils.dart';
 import 'package:neon_framework/widgets.dart';
 import 'package:nextcloud/webdav.dart' as webdav;
@@ -54,7 +55,9 @@ class _FilesBrowserViewState extends State<FilesBrowserView> {
       uri: widget.uri,
       mode: widget.mode,
       hideUri: widget.hideUri,
+      blurBloc: NeonProvider.of<BlurBloc>(context),
       mimeFilter: widget.mimeFilter,
+      size: const Size.square(largeIconSize),
     );
 
     errorsSubscription = bloc.errors.listen((error) {

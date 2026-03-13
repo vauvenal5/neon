@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:built_collection/built_collection.dart';
 import 'package:files_app/src/blocs/files.dart';
@@ -29,13 +30,18 @@ sealed class FilesBrowserBloc implements InteractiveBloc {
     required webdav.PathUri uri,
     required FilesBrowserMode mode,
     required MimeFilter mimeFilter,
+    required BlurBloc blurBloc,
     webdav.PathUri? hideUri,
+    Size? size,
+    bool loadFiles,
   }) = _FilesBrowserBloc;
 
   BehaviorSubject<Result<BuiltList<webdav.WebDavFile>>> get files;
 
   /// Mode to operate the `FilesBrowserView` in.
   FilesBrowserMode get mode;
+
+  Future<void> updateSize(Size newSize);
 }
 
 class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
@@ -46,13 +52,18 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
     required this.uri,
     required this.mode,
     required this.mimeFilter,
+    required this.blurBloc,
     this.hideUri,
+    this.size,
+    bool loadFiles = true,
   }) {
     options.showHiddenFilesOption.addListener(refresh);
 
     updatesSubscription = filesBloc.updates.listen((_) async => refresh());
 
-    unawaited(refresh());
+    if (loadFiles) {
+      unawaited(refresh());
+    }
   }
 
   @override
@@ -62,22 +73,46 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
   final FilesOptions options;
   final MimeFilter mimeFilter;
   final Account account;
+  final BlurBloc blurBloc;
   late StreamSubscription<void> updatesSubscription;
   final webdav.PathUri uri;
   @override
   final FilesBrowserMode mode;
+  Size? size;
   final webdav.PathUri? hideUri;
+
+
 
   @override
   void dispose() {
     options.showHiddenFilesOption.removeListener(refresh);
     unawaited(updatesSubscription.cancel());
-    unawaited(files.close());
+    unawaited(_cleanUpFiles());
     super.dispose();
+  }
+
+  Future<void> _cleanUpFiles() async {
+    if (size != null) {
+      await files.forEach((files) {
+        if (files.hasData) {
+          for (final file in files.data!) {
+            blurBloc.remove(file.blurHash, size!);
+          }
+        }
+      });
+    }
+    await files.close();
   }
 
   @override
   final files = BehaviorSubject();
+
+  Future<void> updateSize(Size newSize) async {
+    if (size != newSize) {
+      size = newSize;
+      await refresh();
+    }
+  }
 
   @override
   Future<void> refresh() async {
@@ -128,6 +163,11 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
           // Some apps like the Photos app are interested only in specific MIME types.
           if (!file.isDirectory && !(file.mimeType?.startsWith(RegExp(mimeFilter.activeMimeRegex)) ?? false)) {
             continue;
+          }
+
+          // if size is provided we want to pre-cache the blurHash results for better user experience
+          if (file.blurHash != null && size != null) {
+            unawaited(blurBloc.getBlurHash(file.blurHash, size!));
           }
 
           b.add(file);
