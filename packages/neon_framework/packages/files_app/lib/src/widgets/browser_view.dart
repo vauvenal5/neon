@@ -102,6 +102,7 @@ class _FilesBrowserViewState extends State<FilesBrowserView> {
                 final file = sorted[index];
 
                 return FileListTile(
+                  key: ValueKey(file.etag!),
                   bloc: widget.filesBloc,
                   browserBloc: bloc,
                   details: FileDetails.fromWebDav(

@@ -6,6 +6,8 @@ import 'package:files_app/src/models/file_details.dart';
 import 'package:files_app/src/pages/details.dart';
 import 'package:files_app/src/utils/dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:neon_framework/blocs.dart';
+import 'package:neon_framework/models.dart';
 import 'package:neon_framework/platform.dart';
 import 'package:neon_framework/utils.dart';
 import 'package:nextcloud/webdav.dart' as webdav;
@@ -40,6 +42,8 @@ class FileActions extends StatelessWidget {
             ),
           ),
         );
+      case FilesFileAction.focus:
+        await NeonProvider.of<AppsBloc>(context).handleAppCapability(context, AlbumViewerCapability(details.uri));
       case FilesFileAction.rename:
         if (!context.mounted) {
           return;
@@ -110,6 +114,11 @@ class FileActions extends StatelessWidget {
           value: FilesFileAction.details,
           child: Text(FilesLocalizations.of(context).details),
         ),
+        if (details.isDirectory)
+          PopupMenuItem(
+            value: FilesFileAction.focus,
+            child: Text('Focus'),
+          ),
         PopupMenuItem(
           value: FilesFileAction.rename,
           child: Text(FilesLocalizations.of(context).actionRename),
@@ -137,6 +146,7 @@ enum FilesFileAction {
   attach,
   toggleFavorite,
   details,
+  focus,
   rename,
   move,
   copy,

@@ -18,6 +18,7 @@ class PhotosApp extends AppImplementation<PhotosBloc, PhotosOptions> {
   PhotosApp();
 
   final ImageHandler _imageHandler = ImageHandler();
+  final AlbumHandler _albumHandler = AlbumHandler();
 
   @override
   final String id = photos.appID;
@@ -26,7 +27,7 @@ class PhotosApp extends AppImplementation<PhotosBloc, PhotosOptions> {
   final LocalizationsDelegate<PhotosLocalizations> localizationsDelegate = PhotosLocalizations.delegate;
 
   @override
-  final List<Locale> supportedLocales = const [Locale('en')];
+  final List<Locale> supportedLocales = PhotosLocalizations.supportedLocales;
 
   @override
   late final PhotosOptions options = PhotosOptions(storage);
@@ -38,7 +39,7 @@ class PhotosApp extends AppImplementation<PhotosBloc, PhotosOptions> {
       );
 
   @override
-  final Widget page = PhotosMainPage();
+  final Widget page = const PhotosMainPage();
 
   @override
   final RouteBase route = $photosAppRoute;
@@ -48,6 +49,11 @@ class PhotosApp extends AppImplementation<PhotosBloc, PhotosOptions> {
     if (_imageHandler.canHandle(capability)) {
       return _imageHandler;
     }
+
+    if (_albumHandler.canHandle(capability)) {
+      return _albumHandler;
+    }
+
     return null;
   }
 }
