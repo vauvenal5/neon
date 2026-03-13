@@ -64,3 +64,9 @@ abstract class AppCapabilityHandler {
   /// The return value is mainly syntactic sugar to allow for easier handling of capabilities.
   Future<C> handle<C extends AppCapability>(BuildContext context, C capability);
 }
+
+class AlbumViewerCapability extends AppCapability {
+  AlbumViewerCapability(this.pathUri);
+
+  final webdav.PathUri pathUri;
+}
