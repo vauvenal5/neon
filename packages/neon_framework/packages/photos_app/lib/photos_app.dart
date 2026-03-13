@@ -18,6 +18,7 @@ class PhotosApp extends AppImplementation<PhotosBloc, PhotosOptions> {
   PhotosApp();
 
   final ImageHandler _imageHandler = ImageHandler();
+  final AlbumHandler _albumHandler = AlbumHandler();
 
   @override
   final String id = photos.appID;
@@ -48,6 +49,11 @@ class PhotosApp extends AppImplementation<PhotosBloc, PhotosOptions> {
     if (_imageHandler.canHandle(capability)) {
       return _imageHandler;
     }
+
+    if (_albumHandler.canHandle(capability)) {
+      return _albumHandler;
+    }
+
     return null;
   }
 }

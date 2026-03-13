@@ -6,6 +6,8 @@ import 'package:files_app/src/blocs/files.dart';
 import 'package:files_app/src/utils/dialog.dart';
 import 'package:files_app/src/widgets/browser_view.dart';
 import 'package:flutter/material.dart';
+import 'package:neon_framework/blocs.dart';
+import 'package:neon_framework/models.dart';
 import 'package:neon_framework/theme.dart';
 import 'package:neon_framework/utils.dart';
 import 'package:neon_framework/widgets.dart';
@@ -69,10 +71,25 @@ class _FilesMainPageState extends State<FilesMainPage> {
             });
           },
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async => showFilesCreateModal(context, uri),
-          tooltip: FilesLocalizations.of(context).uploadFiles,
-          child: Icon(AdaptiveIcons.add),
+        floatingActionButton: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              onPressed: () async =>
+                  NeonProvider.of<AppsBloc>(context).handleAppCapability(context, AlbumViewerCapability(uri)),
+              tooltip: FilesLocalizations.of(context).uploadFiles,
+              heroTag: 'view',
+              child: Icon(AdaptiveIcons.visibility),
+            ),
+            const SizedBox(height: 8),
+            FloatingActionButton(
+              onPressed: () async => showFilesCreateModal(context, uri),
+              tooltip: FilesLocalizations.of(context).uploadFiles,
+              heroTag: 'upload',
+              child: Icon(AdaptiveIcons.add),
+            ),
+          ],
         ),
       ),
     );
