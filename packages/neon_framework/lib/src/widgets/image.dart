@@ -90,35 +90,42 @@ class NeonImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final blurBloc = NeonProvider.of<BlurBloc>(context);
-
     return ResultBuilder.behaviorSubject(
       subject: image,
       builder: (context, imageResult) {
         final data = imageResult.data;
+
         if (data != null) {
           try {
             // TODO: Is this safe enough?
             if (isSvgHint || utf8.decode(data).contains('<svg')) {
-              return SvgPicture.memory(
-                data,
-                height: size?.height,
-                width: size?.width,
-                fit: fit ?? BoxFit.contain,
-                colorFilter: svgColorFilter,
+              return _buildImageWithBlur(
+                context,
+                child: SvgPicture.memory(
+                  data,
+                  height: size?.height,
+                  width: size?.width,
+                  fit: fit ?? BoxFit.contain,
+                  colorFilter: svgColorFilter,
+                ),
+                isLoading: imageResult.isLoading,
               );
             }
           } catch (_) {
             // If the data is not UTF-8
           }
 
-          return Image.memory(
-            data,
-            height: size?.height,
-            width: size?.width,
-            fit: fit ?? BoxFit.contain,
-            gaplessPlayback: true,
-            errorBuilder: (context, error, stacktrace) => _buildError(context, error),
+          return _buildImageWithBlur(
+            context,
+            child: Image.memory(
+              data,
+              height: size?.height,
+              width: size?.width,
+              fit: fit ?? BoxFit.contain,
+              gaplessPlayback: true,
+              errorBuilder: (context, error, stacktrace) => _buildError(context, error),
+            ),
+            isLoading: imageResult.isLoading,
           );
         }
 
@@ -126,20 +133,40 @@ class NeonImage extends StatelessWidget {
           return _buildError(context, imageResult.error);
         }
 
-        return FutureBuilder<ui.Image>(
-          // we are not caching the blurHash result because we do not want to take care of cleanup in here
-          // if precaching is required, the encapsulating widget should take care of it and also of the cleanup
-          future: blurBloc.getBlurHash(blurHash, size ?? const Size.square(32), cache: false,),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return RawImage(image: snapshot.data,);
-            }
+        return _buildBlur(context, isLoading: imageResult.isLoading);
+      },
+    );
+  }
 
-            return SizedBox(
-              width: size?.width,
-              child: const NeonLinearProgressIndicator(),
-            );
-          },
+  Widget _buildImageWithBlur(BuildContext context, {required Widget child, bool isLoading = true}) => Stack(
+        fit: StackFit.passthrough,
+        children: [
+          _buildBlur(context, isLoading: isLoading),
+          child,
+        ],
+      );
+
+  Widget _buildBlur(BuildContext context, {bool isLoading = true}) {
+    final blurBloc = NeonProvider.of<BlurBloc>(context);
+    return FutureBuilder<ui.Image>(
+      key: ValueKey(blurHash),
+      // we are not caching the blurHash result because we do not want to take care of cleanup in here
+      // if precaching is required, the encapsulating widget should take care of it and also of the cleanup
+      future: blurBloc.getBlurHash(
+        blurHash,
+        size ?? const Size.square(32),
+        cache: false,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return RawImage(
+            image: snapshot.data,
+          );
+        }
+
+        return SizedBox(
+          width: size?.width,
+          child: NeonLinearProgressIndicator(visible: isLoading,),
         );
       },
     );

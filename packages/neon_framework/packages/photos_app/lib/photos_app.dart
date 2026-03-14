@@ -27,7 +27,7 @@ class PhotosApp extends AppImplementation<PhotosBloc, PhotosOptions> {
   final LocalizationsDelegate<PhotosLocalizations> localizationsDelegate = PhotosLocalizations.delegate;
 
   @override
-  final List<Locale> supportedLocales = const [Locale('en')];
+  final List<Locale> supportedLocales = PhotosLocalizations.supportedLocales;
 
   @override
   late final PhotosOptions options = PhotosOptions(storage);
@@ -39,7 +39,7 @@ class PhotosApp extends AppImplementation<PhotosBloc, PhotosOptions> {
       );
 
   @override
-  final Widget page = PhotosMainPage();
+  final Widget page = const PhotosMainPage();
 
   @override
   final RouteBase route = $photosAppRoute;

@@ -66,6 +66,7 @@ class _CategoryViewState extends State<CategoryView> {
   void didChangeDependencies() {
     const cut = 550;
     const minAxis = 3;
+    // it is not allowed to access MediaQuery in initState, so we need to calculate the axis and width here
     final realdWidth = MediaQuery.sizeOf(context).width - 8;
     final newAxis = minAxis + minAxis * ((realdWidth - cut) ~/ cut);
     final newWidth = (realdWidth / newAxis) - 4;
@@ -109,9 +110,12 @@ class _CategoryViewState extends State<CategoryView> {
         final List<Widget> slivers =
             categories.keys.map((key) => _buildCategory(key, categories[key]!, sorted, context)).toList();
 
-        return CustomScrollView(
+        return NeonListView.children(
+          scrollKey: 'category-${widget.uri.path}',
+          isLoading: filesSnapshot.isLoading,
+          error: filesSnapshot.error,
+          onRefresh: bloc.refresh,
           slivers: slivers,
-          physics: const AlwaysScrollableScrollPhysics(),
         );
       },
     );
