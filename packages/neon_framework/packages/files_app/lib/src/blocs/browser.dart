@@ -34,6 +34,7 @@ sealed class FilesBrowserBloc implements InteractiveBloc {
     webdav.PathUri? hideUri,
     Size? size,
     bool loadFiles,
+    bool recursive,
   }) = _FilesBrowserBloc;
 
   BehaviorSubject<Result<BuiltList<webdav.WebDavFile>>> get files;
@@ -55,6 +56,7 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
     required this.blurBloc,
     this.hideUri,
     this.size,
+    this.recursive = false,
     bool loadFiles = true,
   }) {
     options.showHiddenFilesOption.addListener(refresh);
@@ -80,6 +82,7 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
   final FilesBrowserMode mode;
   Size? size;
   final webdav.PathUri? hideUri;
+  final bool recursive;
 
 
 
@@ -92,15 +95,6 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
   }
 
   Future<void> _cleanUpFiles() async {
-    if (size != null) {
-      await files.forEach((files) {
-        if (files.hasData) {
-          for (final file in files.data!) {
-            blurBloc.remove(file.blurHash, size!);
-          }
-        }
-      });
-    }
     await files.close();
   }
 
@@ -130,7 +124,7 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
           ocSize: true,
           ocFavorite: true,
         ),
-        depth: webdav.WebDavDepth.one,
+        depth: recursive ? webdav.WebDavDepth.infinity : webdav.WebDavDepth.one,
       ),
       converter: const webdav.WebDavResponseConverter(),
       unwrap: (response) => BuiltList<webdav.WebDavFile>.build((b) {
@@ -163,11 +157,6 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
           // Some apps like the Photos app are interested only in specific MIME types.
           if (!file.isDirectory && !(file.mimeType?.startsWith(RegExp(mimeFilter.activeMimeRegex)) ?? false)) {
             continue;
-          }
-
-          // if size is provided we want to pre-cache the blurHash results for better user experience
-          if (file.blurHash != null && size != null) {
-            unawaited(blurBloc.getBlurHash(file.blurHash, size!));
           }
 
           b.add(file);

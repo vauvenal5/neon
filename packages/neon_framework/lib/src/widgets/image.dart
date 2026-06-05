@@ -98,16 +98,12 @@ class NeonImage extends StatelessWidget {
           try {
             // TODO: Is this safe enough?
             if (isSvgHint || utf8.decode(data).contains('<svg')) {
-              return _buildImageWithBlur(
-                context,
-                child: SvgPicture.memory(
-                  data,
-                  height: size?.height,
-                  width: size?.width,
-                  fit: fit ?? BoxFit.contain,
-                  colorFilter: svgColorFilter,
-                ),
-                isLoading: imageResult.isLoading,
+              return SvgPicture.memory(
+                data,
+                height: size?.height,
+                width: size?.width,
+                fit: fit ?? BoxFit.contain,
+                colorFilter: svgColorFilter,
               );
             }
           } catch (_) {
@@ -148,31 +144,37 @@ class NeonImage extends StatelessWidget {
       );
 
   Widget _buildBlur(BuildContext context, {bool isLoading = true}) {
-    final blurBloc = NeonProvider.of<BlurBloc>(context);
-    return FutureBuilder<ui.Image>(
+    if (blurHash == null) {
+      return _buildNoBlur(context, isLoading: isLoading);
+    }
+
+    final blurTask = NeonProvider.of<BlurBloc>(context).getBlurHash(
+      blurHash!,
+      size ?? const Size.square(32),
+    );
+
+    return ValueListenableBuilder(
       // Key is important to ensure that we can move it without cost in the widget tree.
-      key: ValueKey(blurHash),
-      // We are not caching the blurHash result because we do not want to take care of cleanup in here.
-      // If pre-caching is required, the encapsulating widget should take care of it and also of the cleanup.
-      future: blurBloc.getBlurHash(
-        blurHash,
-        size ?? const Size.square(32),
-        cache: false,
-      ),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          return RawImage(
-            image: snapshot.data,
-          );
+      key: ValueKey('$blurHash'),
+      valueListenable: blurTask.blur,
+      builder: (context, image, _) {
+        if (image == null) {
+          return _buildNoBlur(context, isLoading: isLoading);
         }
 
-        return SizedBox(
-          width: size?.width,
-          child: NeonLinearProgressIndicator(visible: isLoading,),
+        return RawImage(
+          image: image,
         );
       },
     );
   }
+
+  Widget _buildNoBlur(BuildContext context, {bool isLoading = true}) => SizedBox(
+        width: size?.width,
+        child: NeonLinearProgressIndicator(
+          visible: isLoading,
+        ),
+      );
 
   Widget _buildError(BuildContext context, Object? error) =>
       errorBuilder?.call(context, error) ??

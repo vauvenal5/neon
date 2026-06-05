@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:dynamite_runtime/http_client.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
@@ -81,18 +82,42 @@ class RequestManager {
     required UnwrapCallback<T, R> unwrap,
     AsyncValueGetter<Map<String, String>>? getCacheHeaders,
   }) async {
-    await _requestQueue.add(() => _wrap(
-          account: account,
-          subject: subject,
-          getRequest: getRequest,
-          converter: converter,
-          unwrap: unwrap,
-          getCacheHeaders: getCacheHeaders,
-        ));
+    if (subject.isClosed) {
+      return;
+    }
+
+    if (!subject.hasValue) {
+      subject.add(Result.loading());
+    }
+
+    var request = getRequest();
+
+    final shouldRequest = await _shouldRequest(
+      request: request,
+      account: account,
+      subject: subject,
+      getRequest: getRequest,
+      converter: converter,
+      unwrap: unwrap,
+      getCacheHeaders: getCacheHeaders,
+    );
+
+    if (shouldRequest) {
+      await _requestQueue.add(() => _requestFromServer(
+        request: request,
+        account: account,
+        subject: subject,
+        getRequest: getRequest,
+        converter: converter,
+        unwrap: unwrap,
+        getCacheHeaders: getCacheHeaders,
+      ));
+    }
   }
 
-  /// Executes a generic [http.Request].
-  Future<void> _wrap<T, R>({
+  /// Check if [http.Request] is cached or not.
+  Future<bool> _shouldRequest<T, R>({
+    required http.Request request,
     required Account account,
     required BehaviorSubject<Result<T>> subject,
     required http.Request Function() getRequest,
@@ -100,18 +125,9 @@ class RequestManager {
     required UnwrapCallback<T, R> unwrap,
     AsyncValueGetter<Map<String, String>>? getCacheHeaders,
   }) async {
-    if (subject.isClosed) {
-      return;
-    }
-    if (!subject.hasValue) {
-      subject.add(Result.loading());
-    }
-
-    var request = getRequest();
-
     final cachedResponse = await _cache?.get(account, request);
     if (subject.isClosed) {
-      return;
+      return false;
     }
 
     if (cachedResponse != null) {
@@ -123,7 +139,7 @@ class RequestManager {
       // Return as the value is up to date.
       if (parameters case CacheParameters(isExpired: false)) {
         subject.add(Result(unwrapped, null, isLoading: false, isCached: true));
-        return;
+        return false;
       }
 
       // Emit the cached data it in a loading state.
@@ -143,7 +159,7 @@ class RequestManager {
         try {
           final newHeaders = await getCacheHeaders.call();
           if (subject.isClosed) {
-            return;
+            return false;
           }
 
           final newParameters = CacheParameters.parseHeaders(newHeaders);
@@ -157,7 +173,7 @@ class RequestManager {
             );
 
             subject.add(Result(unwrapped, null, isLoading: false, isCached: true));
-            return;
+            return false;
           }
         } on HttpTimeoutException catch (error) {
           _log.info(
@@ -184,6 +200,18 @@ class RequestManager {
       subject.add(subject.value.asLoading());
     }
 
+    return true;
+  }
+
+  Future<void> _requestFromServer<T, R>({
+    required http.Request request,
+    required Account account,
+    required BehaviorSubject<Result<T>> subject,
+    required http.Request Function() getRequest,
+    required Converter<http.Response, R> converter,
+    required UnwrapCallback<T, R> unwrap,
+    AsyncValueGetter<Map<String, String>>? getCacheHeaders,
+  }) async {
     final client = httpClient ?? account.client;
 
     for (var i = 0; i < kMaxTries; i++) {

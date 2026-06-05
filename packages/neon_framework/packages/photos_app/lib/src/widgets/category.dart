@@ -51,6 +51,7 @@ class _CategoryViewState extends State<CategoryView> {
       blurBloc: blurBloc,
       mimeFilter: widget.mimeFilter,
       loadFiles: false,
+      recursive: true,
     );
 
     errorsSubscription = bloc.errors.listen((error) {
