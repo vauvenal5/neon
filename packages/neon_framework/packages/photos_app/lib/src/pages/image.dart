@@ -1,14 +1,17 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:files_app/files_lib.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
+import 'package:logging/logging.dart';
 import 'package:neon_framework/utils.dart';
 import 'package:nextcloud/webdav.dart' as webdav;
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:photos_app/src/options.dart';
+import 'package:photos_app/src/pages/image_key.dart';
 import 'package:photos_app/src/pages/image_provider.dart';
 
 class ImagePage extends StatefulWidget {
@@ -27,29 +30,46 @@ class ImagePage extends StatefulWidget {
 
 class _ImagePageState extends State<ImagePage> {
   late PageController pageController;
-  late int _currentIndex;
   late List<webdav.WebDavFile> _files;
   var _showAppBar = true;
+  late StreamSubscription<FilesRefetchTask?> _subscription;
+  late ImageKey _imageKey;
+
+  final log = Logger('ImagePageState');
 
   @override
   void initState() {
     super.initState();
 
     _files = widget.sorted.where((file) => file.mimeType?.startsWith(RegExp('image/.*')) ?? false).toList();
-    _currentIndex = _files.indexOf(widget.file);
+    _imageKey = ImageKey(index: _files.indexOf(widget.file));
 
-    pageController = PageController(initialPage: _currentIndex);
+    pageController = PageController(initialPage: _imageKey.index);
+    _subscription = NeonProvider.of<FilesBloc>(context)
+        .refetchTasks
+        .where(
+          (task) => task?.uri == _files[_imageKey.index].path,
+        )
+        .listen((task) async {
+      if (_files[_imageKey.index].path == task?.uri) {
+        log.fine('Incrementing refetch index for ${_files[_imageKey.index].path}');
+        setState(() {
+          _imageKey = _imageKey.refetchKey();
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values));
+    unawaited(_subscription.cancel());
     super.dispose();
   }
 
   void _onPageChanged(int index) {
     setState(() {
-      _currentIndex = index;
+      _imageKey = ImageKey(index: index);
     });
   }
 
@@ -61,8 +81,8 @@ class _ImagePageState extends State<ImagePage> {
     return Scaffold(
       appBar: _showAppBar
           ? AppBar(
-              title: Text(_files[_currentIndex].name),
-              actions: [FileActions(details: FileDetails.fromWebDav(file: _files[_currentIndex]))],
+              title: Text(_files[_imageKey.index].name),
+              actions: [FileActions(details: FileDetails.fromWebDav(file: _files[_imageKey.index]))],
             )
           : null,
       body: GestureDetector(
@@ -90,17 +110,22 @@ class _ImagePageState extends State<ImagePage> {
                   pageController: pageController,
                   onPageChanged: _onPageChanged,
                   builder: (context, index) {
-                    final file = _files[index];
+                    // in case it is a new page we need to create a new key, otherwise we need to use the existing one
+                    final fileKey = _imageKey.index == index ? _imageKey : ImageKey(index: index);
+                    final file = _files[fileKey.index];
+                    log.fine('Drawing ${file.path}');
+
                     return PhotoViewGalleryPageOptions(
+                      photoViewKey: ObjectKey(fileKey),
                       minScale: PhotoViewComputedScale.contained,
-                      imageProvider: NeonImageProvider(file: file, bloc: bloc, options: options),
+                      imageProvider: NeonImageProvider(file: file, bloc: bloc, options: options, key: fileKey),
                     );
                   },
                   loadingBuilder: (context, event) => Stack(
                     children: [
-                      if (_files[_currentIndex].blurHash != null)
+                      if (_files[_imageKey.index].blurHash != null)
                         BlurHash(
-                          hash: _files[_currentIndex].blurHash!,
+                          hash: _files[_imageKey.index].blurHash!,
                           imageFit: BoxFit.contain,
                         ),
                       Center(
@@ -129,7 +154,7 @@ class _ImagePageState extends State<ImagePage> {
 
     var buttons = <Widget>[];
 
-    if (_currentIndex > 0) {
+    if (_imageKey.index > 0) {
       buttons.add(_buildDesktopNavButton(
         context: context,
         child: const Icon(Icons.arrow_back),
@@ -139,7 +164,7 @@ class _ImagePageState extends State<ImagePage> {
       ));
     }
 
-    if (_currentIndex < _files.length - 1) {
+    if (_imageKey.index < _files.length - 1) {
       buttons.add(_buildDesktopNavButton(
         context: context,
         child: const Icon(Icons.arrow_forward),

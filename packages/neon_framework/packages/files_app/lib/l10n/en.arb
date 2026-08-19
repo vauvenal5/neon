@@ -6,6 +6,7 @@
   "actionCopy": "Copy",
   "actionShare": "Share",
   "actionAttach": "Use as",
+  "actionDownload": "Download",
   "errorUnableToOpenFile": "Unable to open the file",
   "general": "General",
   "goToPath": "Go to /{path}",

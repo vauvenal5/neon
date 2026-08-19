@@ -100,6 +100,12 @@ abstract class FilesLocalizations {
   /// **'Delete'**
   String get actionDelete;
 
+  /// No description provided for @actionDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get actionDownload;
+
   /// No description provided for @actionRename.
   ///
   /// In en, this message translates to:

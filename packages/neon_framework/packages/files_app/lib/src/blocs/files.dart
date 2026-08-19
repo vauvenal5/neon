@@ -48,11 +48,15 @@ sealed class FilesBloc implements InteractiveBloc {
 
   void createFolder(webdav.PathUri uri);
 
+  Future<void> refetchFile(webdav.PathUri uri, String etag);
+
   Future<Uint8List> fetchFile(webdav.PathUri uri, String etag, {bool cache = true});
 
   BehaviorSubject<BuiltList<FilesUploadTask>> get uploadTasks;
 
   BehaviorSubject<FilesDownloadTask?> get downloadTasks;
+
+  BehaviorSubject<FilesRefetchTask?> get refetchTasks;
 
   FilesDownloadTask? getDownloadTask(webdav.PathUri path);
 
@@ -89,12 +93,16 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
   final downloadTasks = BehaviorSubject.seeded(null);
 
   @override
+  final refetchTasks = BehaviorSubject.seeded(null);
+
+  @override
   void dispose() {
     uploadQueue.dispose();
     downloadQueue.dispose();
     unawaited(uploadTasks.close());
     unawaited(updatesController.close());
     unawaited(downloadTasks.close());
+    unawaited(refetchTasks.close());
 
     options.uploadQueueParallelism.removeListener(uploadParallelismListener);
     options.downloadQueueParallelism.removeListener(downloadParallelismListener);
@@ -283,6 +291,18 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
   }
 
   @override
+  Future<void> refetchFile(webdav.PathUri uri, String etag) async {
+    final file = await _getLocalCacheFile(uri, etag);
+
+    if(file.existsSync()) {
+      log.fine("Deleting cached file for $uri since it is being refetched");
+      await file.delete();
+    }
+
+    refetchTasks.add(FilesRefetchTask(uri: uri));
+  }
+
+  @override
   Future<Uint8List> fetchFile(webdav.PathUri uri, String etag, {bool cache = true}) async {
     if (NeonPlatform.instance.canUsePaths && cache) {
       final cachedFile = await cacheFile(uri, etag);
@@ -292,8 +312,7 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
   }
 
   Future<File> cacheFile(webdav.PathUri uri, String etag) async {
-    final cacheDir = await getApplicationCacheDirectory();
-    final file = File(p.join(cacheDir.path, 'files', etag.replaceAll('"', ''), uri.name));
+    final file = await _getLocalCacheFile(uri, etag);
 
     if (!file.existsSync()) {
       log.fine('Downloading $uri since it does not exist');
@@ -306,7 +325,12 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
     return file;
   }
 
-  Future<void> downloadIO(webdav.PathUri uri, File file) {
+  Future<File> _getLocalCacheFile(webdav.PathUri uri, String etag) async {
+    final cacheDir = await getApplicationCacheDirectory();
+    return File(p.join(cacheDir.path, 'files', etag.replaceAll('"', ''), uri.name));
+  }
+
+  Future<void> downloadIO(webdav.PathUri uri, File file) async {
     final existingTask = getDownloadTask(uri);
 
     if (existingTask != null && existingTask is FilesDownloadTaskIO) {

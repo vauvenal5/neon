@@ -25,10 +25,12 @@ sealed class FilesTask {
   Future<void> execute(NextcloudClient client) async {}
 }
 
+class FilesRefetchTask extends FilesTask {
+  FilesRefetchTask({required super.uri});
+}
+
 sealed class FilesDownloadTask extends FilesTask {
-  FilesDownloadTask({
-    required super.uri,
-  });
+  FilesDownloadTask({required super.uri});
 }
 
 sealed class FilesUploadTask extends FilesTask {
