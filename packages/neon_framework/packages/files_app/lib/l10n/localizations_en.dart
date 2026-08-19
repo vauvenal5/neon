@@ -27,6 +27,9 @@ class FilesLocalizationsEn extends FilesLocalizations {
   String get actionAttach => 'Use as';
 
   @override
+  String get actionDownload => 'Download';
+
+  @override
   String get errorUnableToOpenFile => 'Unable to open the file';
 
   @override

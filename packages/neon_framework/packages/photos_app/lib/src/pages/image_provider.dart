@@ -5,22 +5,24 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nextcloud/webdav.dart' as webdav;
 import 'package:photos_app/src/options.dart';
+import 'package:photos_app/src/pages/image_key.dart';
 
-class NeonImageProvider extends ImageProvider<webdav.WebDavFile> {
-  NeonImageProvider({required this.file, required this.bloc, required this.options});
+class NeonImageProvider extends ImageProvider<ImageKey> {
+  NeonImageProvider({required this.file, required this.bloc, required this.options, required this.key});
 
   final webdav.WebDavFile file;
   final FilesBloc bloc;
   final PhotosOptions options;
+  final ImageKey key;
 
   @override
-  Future<webdav.WebDavFile> obtainKey(ImageConfiguration configuration) {
-    return SynchronousFuture<webdav.WebDavFile>(file);
+  Future<ImageKey> obtainKey(ImageConfiguration configuration) {
+    return SynchronousFuture<ImageKey>(key);
   }
 
   @override
   @protected
-  ImageStreamCompleter loadImage(webdav.WebDavFile key, ImageDecoderCallback decode) {
+  ImageStreamCompleter loadImage(ImageKey key, ImageDecoderCallback decode) {
     return MultiFrameImageStreamCompleter(
       codec: _loadAsync(decode),
       scale: 1.0,
@@ -33,7 +35,11 @@ class NeonImageProvider extends ImageProvider<webdav.WebDavFile> {
   }
 
   Future<ui.Codec> _loadAsync(ImageDecoderCallback decode) async {
-    final data = await bloc.fetchFile(file.path, file.etag!, cache: options.cacheImagesOption.value);
+    final data = await bloc.fetchFile(
+      file.path,
+      file.etag!,
+      cache: options.cacheImagesOption.value,
+    );
     return decode(await ui.ImmutableBuffer.fromUint8List(data));
   }
 

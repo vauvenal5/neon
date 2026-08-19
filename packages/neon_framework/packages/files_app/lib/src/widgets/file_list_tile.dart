@@ -166,6 +166,7 @@ class _FileIcon extends StatelessWidget {
           Icon(
             switch (task) {
               FilesUploadTask() => MdiIcons.upload,
+              FilesRefetchTask() => MdiIcons.refresh,
               FilesDownloadTask() => MdiIcons.download,
             },
             color: Theme.of(context).colorScheme.primary,

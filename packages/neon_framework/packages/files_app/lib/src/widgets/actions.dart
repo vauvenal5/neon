@@ -84,6 +84,8 @@ class FileActions extends StatelessWidget {
         if (decision) {
           bloc.delete(details.uri);
         }
+      case FilesFileAction.download:
+        await bloc.refetchFile(details.uri, details.etag!);
     }
   }
 
@@ -135,6 +137,11 @@ class FileActions extends StatelessWidget {
           value: FilesFileAction.delete,
           child: Text(FilesLocalizations.of(context).actionDelete),
         ),
+        if (!details.isDirectory)
+          PopupMenuItem(
+            value: FilesFileAction.download,
+            child: Text(FilesLocalizations.of(context).actionDownload),
+          ),
       ],
       onSelected: (action) async => onSelected(context, action),
     );
@@ -151,4 +158,5 @@ enum FilesFileAction {
   move,
   copy,
   delete,
+  download,
 }
