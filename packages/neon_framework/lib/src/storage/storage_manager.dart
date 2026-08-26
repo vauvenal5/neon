@@ -89,6 +89,13 @@ class NeonStorage {
     return DefaultSettingsStore(storage, suffix ?? groupKey.name);
   }
 
+  /// Creates an app settings store scoped to a single account.
+  SettingsStore appAccountSettingsStore({required String appID, required String accountID}) {
+    // Keep persistence namespacing independent from the app ID used by exports.
+    final storage = SQLiteCachedPersistence(prefix: '${StorageKeys.accountOptions.value}-$accountID-app-$appID');
+    return DefaultSettingsStore(storage, appID);
+  }
+
   /// Initializes a new `KeyValueStorage`.
   SingleValueStore singleValueStore(StorageKeys key) {
     _assertInitialized();

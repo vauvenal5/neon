@@ -15,7 +15,7 @@ import 'package:notes_app/src/options.dart';
 import 'package:notes_app/src/pages/main.dart';
 import 'package:notes_app/src/routes.dart';
 
-class NotesApp extends AppImplementation<NotesBloc, NotesOptions> {
+class NotesApp extends NoAccountOptionsAppImplementation<NotesBloc, NotesOptions> {
   NotesApp();
 
   @override
@@ -31,7 +31,7 @@ class NotesApp extends AppImplementation<NotesBloc, NotesOptions> {
   late final NotesOptions options = NotesOptions(storage);
 
   @override
-  NotesBloc buildBloc(Account account) => NotesBloc(
+  NotesBloc buildBlocWithoutAccountOptions(Account account) => NotesBloc(
         account: account,
       );
 

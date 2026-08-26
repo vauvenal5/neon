@@ -282,17 +282,17 @@ class _AppsBloc extends InteractiveBloc implements AppsBloc {
 
   // coverage:ignore-start
   @override
-  T getAppBloc<T extends Bloc>(AppImplementation<T, dynamic> appImplementation) => appImplementation.getBloc(account);
+  T getAppBloc<T extends Bloc>(AppImplementation<T, dynamic> appImplementation) =>
+      appImplementation.getBloc(account, accountOptions);
 
   @override
   List<Provider<Bloc>> get appBlocProviders =>
       allAppImplementations.map((appImplementation) => appImplementation.blocProvider).toList();
   // coverage:ignore-end
-  
+
   @override
-  AppCapabilityHandler? findAppCapabilityHandler(AppCapability capability) =>
-      appImplementations.valueOrNull?.data
-          ?.map((app) => app.appCapabilityHandler(capability))
-          .whereNot((handler) => handler == null)
-          .firstOrNull;
+  AppCapabilityHandler? findAppCapabilityHandler(AppCapability capability) => appImplementations.valueOrNull?.data
+      ?.map((app) => app.appCapabilityHandler(capability))
+      .whereNot((handler) => handler == null)
+      .firstOrNull;
 }

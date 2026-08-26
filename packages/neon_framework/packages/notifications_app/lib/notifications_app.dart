@@ -14,7 +14,7 @@ import 'package:notifications_app/src/pages/main.dart';
 import 'package:notifications_app/src/routes.dart';
 import 'package:rxdart/rxdart.dart';
 
-class NotificationsApp extends AppImplementation<NotificationsBlocInterface, NotificationsOptions>
+class NotificationsApp extends NoAccountOptionsAppImplementation<NotificationsBlocInterface, NotificationsOptions>
     implements
         // ignore: avoid_implementing_value_types
         NotificationsAppInterface<NotificationsBlocInterface, NotificationsOptions> {
@@ -33,7 +33,7 @@ class NotificationsApp extends AppImplementation<NotificationsBlocInterface, Not
   late final NotificationsOptions options = NotificationsOptions(storage);
 
   @override
-  NotificationsBlocInterface buildBloc(Account account) => NotificationsBloc(
+  NotificationsBlocInterface buildBlocWithoutAccountOptions(Account account) => NotificationsBloc(
         account: account,
       );
 

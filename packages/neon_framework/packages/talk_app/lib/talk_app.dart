@@ -21,7 +21,7 @@ import 'package:talk_app/src/theme.dart';
 
 /// Implementation of the server `talk` app.
 @experimental
-class TalkApp extends AppImplementation<TalkBloc, TalkOptions> {
+class TalkApp extends NoAccountOptionsAppImplementation<TalkBloc, TalkOptions> {
   /// Creates a new Talk app implementation instance.
   TalkApp();
 
@@ -41,7 +41,7 @@ class TalkApp extends AppImplementation<TalkBloc, TalkOptions> {
   late final TalkOptions options = TalkOptions(storage);
 
   @override
-  TalkBloc buildBloc(Account account) => TalkBloc(
+  TalkBloc buildBlocWithoutAccountOptions(Account account) => TalkBloc(
         account: account,
       );
 

@@ -66,6 +66,16 @@ void main() {
       expect(Map.fromEntries([export]), equals(json));
     });
 
+    test('serialize without export envelope', () {
+      when(() => option1.key).thenReturn(Keys.key1);
+      when(option1.serialize).thenReturn(true);
+      when(() => option1.enabled).thenReturn(true);
+      when(() => option2.enabled).thenReturn(false);
+
+      // Raw values let composite exporters define their own schema.
+      expect(collection.serialize(), {'key1': true});
+    });
+
     test('import', () {
       when(() => option1.key).thenReturn(Keys.key1);
       when(() => option2.key).thenReturn(Keys.key2);

@@ -125,12 +125,30 @@ class AccountsBlocExporter implements Exportable {
   /// Key the exported value will be stored at.
   static final _key = StorageKeys.accountOptions.value;
 
+  static const _optionsKey = 'options';
+  static const _appsKey = 'apps';
+
   @override
   MapEntry<String, Object?> export() => MapEntry(_key, Map.fromEntries(_serialize()));
 
   Iterable<MapEntry<String, Object?>> _serialize() sync* {
     for (final account in accountsBloc.accounts.value) {
-      yield accountsBloc.getOptionsFor(account).export();
+      final options = accountsBloc.getOptionsFor(account);
+      final apps = <String, Object?>{};
+      for (final entry in options.appOptions) {
+        // Serialize each collection once because option serializers may perform normalization.
+        final values = entry.value.serialize();
+        if (values.isNotEmpty) {
+          apps[entry.key.id] = values;
+        }
+      }
+
+      // Give framework and app settings distinct schema namespaces.
+      yield MapEntry(account.id, <String, Object?>{
+        // Preserve separate schema namespaces even though AccountOptions now owns both collections.
+        _optionsKey: options.serialize(),
+        if (apps.isNotEmpty) _appsKey: apps,
+      });
     }
   }
 
@@ -145,8 +163,23 @@ class AccountsBlocExporter implements Exportable {
     for (final element in values.entries) {
       final account = accountsBloc.accountByID(element.key);
 
-      if (account != null) {
-        accountsBloc.getOptionsFor(account).import(values);
+      if (account == null || element.value is! Map<String, Object?>) {
+        continue;
+      }
+
+      final accountValues = element.value! as Map<String, Object?>;
+      final options = accountsBloc.getOptionsFor(account);
+      if (accountValues[_optionsKey] case final Map<String, Object?> optionValues) {
+        options.deserialize(optionValues);
+      }
+
+      if (accountValues[_appsKey] case final Map<String, Object?> apps) {
+        for (final entry in options.appOptions) {
+          final appValues = apps[entry.key.id];
+          if (appValues is Map<String, Object?>) {
+            entry.value.deserialize(appValues);
+          }
+        }
       }
     }
   }

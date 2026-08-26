@@ -84,21 +84,27 @@ abstract class AppImplementation<T extends Bloc, R extends AppImplementationOpti
   final blocsCache = AccountCache<T>();
 
   /// Returns a bloc [T] from the [blocsCache] or builds a new one if absent.
-  T getBloc(Account account) => blocsCache[account] ??= buildBloc(account);
+  T getBloc(Account account, AccountOptionsResolver accountOptions) =>
+      blocsCache[account] ??= buildBloc(account, accountOptions);
 
   /// Build the bloc [T] for the given [account].
   ///
   /// Blocs are long lived and should not be rebuilt for subsequent calls.
   /// Use [getBloc] which also handles caching.
+  ///
+  /// The resolver is forwarded so implementations can consume account-scoped options during construction.
   @protected
-  T buildBloc(Account account);
+  T buildBloc(Account account, AccountOptionsResolver accountOptions);
 
   /// The [Provider] building the bloc [T] the currently active account.
   ///
   /// Blocs will not be disposed on disposal of the provider. You must handle
   /// the [blocsCache] manually.
   Provider<T> get blocProvider => Provider<T>(
-        create: (context) => getBloc(NeonProvider.of<Account>(context)),
+        create: (context) => getBloc(
+          NeonProvider.of<Account>(context),
+          NeonProvider.of<AccountOptionsResolver>(context),
+        ),
       );
 
   /// The count of unread notifications.
@@ -113,7 +119,10 @@ abstract class AppImplementation<T extends Bloc, R extends AppImplementationOpti
 
   /// The drawer destination used in widgets like [NavigationDrawer].
   NeonNavigationDestination destination(BuildContext context) {
-    final bloc = getBloc(NeonProvider.of<Account>(context));
+    final bloc = getBloc(
+      NeonProvider.of<Account>(context),
+      NeonProvider.of<AccountOptionsResolver>(context),
+    );
 
     return NeonNavigationDestination(
       label: name(context),
@@ -198,4 +207,43 @@ abstract class AppImplementation<T extends Bloc, R extends AppImplementationOpti
   /// If the app provides handling for a specific [AppCapability], it can return a handler allowing Neon to make use of it.
   /// For example, this photos app provides a handler for the [ImageViewerCapability] which allows Neon to display images in the photos app instead of the system app.
   AppCapabilityHandler? appCapabilityHandler(AppCapability capability) => null;
+}
+
+/// Resolves account-scoped options owned by an account settings aggregate.
+abstract interface class AccountOptionsResolver implements Disposable {
+  /// Returns the options built for [app].
+  A getAccountOptions<T extends Bloc, R extends AppImplementationOptions, A extends AppImplementationOptions>(
+    AccountOptionsAppImplementation<T, R, A> app,
+  );
+
+  /// Returns the account-specific options registered for [app], if any.
+  AppImplementationOptions? getAppAccountOptions(AppImplementation app);
+}
+
+/// App base class for blocs that do not consume account-scoped options.
+abstract class NoAccountOptionsAppImplementation<T extends Bloc, R extends AppImplementationOptions>
+    extends AppImplementation<T, R> {
+  // Keep the resolver out of implementations that do not need account-scoped options.
+  @override
+  T buildBloc(Account account, AccountOptionsResolver accountOptions) => buildBlocWithoutAccountOptions(account);
+
+  /// Builds the app bloc without account-scoped options.
+  @protected
+  T buildBlocWithoutAccountOptions(Account account);
+}
+
+/// App base class for blocs that consume account-scoped options.
+abstract class AccountOptionsAppImplementation<T extends Bloc, R extends AppImplementationOptions,
+    A extends AppImplementationOptions> extends AppImplementation<T, R> {
+  /// Builds options using storage owned by the account settings aggregate.
+  A buildAccountOptions(Account account, SettingsStore storage);
+
+  // Resolve the typed options in the shared construction hook while keeping app implementations strongly typed.
+  @override
+  T buildBloc(Account account, AccountOptionsResolver accountOptions) =>
+      buildBlocWithAccountOptions(account, accountOptions.getAccountOptions(this));
+
+  /// Builds the app bloc with the account-scoped [accountOptions] it consumes.
+  @protected
+  T buildBlocWithAccountOptions(Account account, A accountOptions);
 }
