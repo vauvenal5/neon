@@ -25,6 +25,11 @@ void main() {
       expect(result, equals(false));
       verify(() => persistence.remove(key)).called(1);
 
+      when(persistence.clear).thenAnswer((_) async => true);
+      // Account deletion clears the complete app-specific namespace at once.
+      expect(await appStorage.clear(), isTrue);
+      verify(persistence.clear).called(1);
+
       when(() => persistence.getValue(key)).thenReturn(null);
       result = appStorage.getString(key);
       expect(result, isNull);

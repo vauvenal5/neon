@@ -38,13 +38,21 @@ void main() {
 
     test('AccountsBlocExporter', () {
       final bloc = MockAccountsBloc();
+      final app = MockAccountOptionsAppImplementation();
+      final appOptions = MockAppImplementationOptions();
       final exporter = AccountsBlocExporter(bloc);
 
       final account = MockAccount();
 
-      final accountValue = MapEntry(account.id, 'value');
       final accountExport = {
-        'accounts': {account.id: 'value'},
+        'accounts': {
+          account.id: {
+            'options': {'initial-app': 'photos'},
+            'apps': {
+              'photos': {'photosHomePath': 'Pictures/'},
+            },
+          },
+        },
       };
 
       when(() => bloc.accounts).thenAnswer((_) => BehaviorSubject.seeded(BuiltList()));
@@ -56,13 +64,18 @@ void main() {
       when(() => bloc.accounts).thenAnswer((_) => BehaviorSubject.seeded(BuiltList([account])));
       when(() => bloc.accountByID(account.id)).thenReturn(account);
       when(() => bloc.getOptionsFor(account)).thenReturn(fakeOptions);
-      when(fakeOptions.export).thenReturn(accountValue);
+      // The merged AccountOptions mock supplies both framework and app option collections.
+      when(() => fakeOptions.appOptions).thenReturn([MapEntry(app, appOptions)]);
+      when(fakeOptions.serialize).thenReturn({'initial-app': 'photos'});
+      when(() => app.id).thenReturn('photos');
+      when(appOptions.serialize).thenReturn({'photosHomePath': 'Pictures/'});
 
       export = exporter.export();
       expect(Map.fromEntries([export]), accountExport);
 
       exporter.import(accountExport);
-      verify(() => fakeOptions.import({account.id: 'value'})).called(1);
+      verify(() => fakeOptions.deserialize({'initial-app': 'photos'})).called(1);
+      verify(() => appOptions.deserialize({'photosHomePath': 'Pictures/'})).called(1);
     });
   });
 

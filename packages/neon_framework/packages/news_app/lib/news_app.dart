@@ -18,7 +18,7 @@ import 'package:nextcloud/news.dart' as news;
 import 'package:nextcloud/nextcloud.dart';
 import 'package:rxdart/rxdart.dart';
 
-class NewsApp extends AppImplementation<NewsBloc, NewsOptions> {
+class NewsApp extends NoAccountOptionsAppImplementation<NewsBloc, NewsOptions> {
   NewsApp();
 
   @override
@@ -34,7 +34,7 @@ class NewsApp extends AppImplementation<NewsBloc, NewsOptions> {
   late final NewsOptions options = NewsOptions(storage);
 
   @override
-  NewsBloc buildBloc(Account account) => NewsBloc(
+  NewsBloc buildBlocWithoutAccountOptions(Account account) => NewsBloc(
         options: options,
         account: account,
       );

@@ -7,6 +7,7 @@ import 'package:neon_framework/src/settings/widgets/option_settings_tile.dart';
 import 'package:neon_framework/src/settings/widgets/settings_category.dart';
 import 'package:neon_framework/src/settings/widgets/settings_list.dart';
 import 'package:neon_framework/src/theme/dialog.dart';
+import 'package:neon_framework/src/utils/provider.dart';
 import 'package:neon_framework/src/widgets/dialog.dart';
 
 @internal
@@ -20,6 +21,7 @@ class AppImplementationSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accountOptions = NeonProvider.of<AccountOptionsResolver>(context).getAppAccountOptions(appImplementation);
     final appBar = AppBar(
       title: Text(appImplementation.name(context)),
       actions: [
@@ -39,6 +41,8 @@ class AppImplementationSettingsPage extends StatelessWidget {
 
             if (decision ?? false) {
               appImplementation.options.reset();
+              // Reset account-specific options too because they are displayed on this page.
+              accountOptions?.reset();
             }
           },
           tooltip: NeonLocalizations.of(context).settingsResetFor(appImplementation.name(context)),
@@ -60,6 +64,14 @@ class AppImplementationSettingsPage extends StatelessWidget {
                   OptionSettingsTile(option: option),
               ],
             ),
+        if (accountOptions != null && accountOptions.options.isNotEmpty)
+          SettingsCategory(
+            // App settings flatten account-specific options into one clearly scoped category.
+            title: Text(NeonLocalizations.of(context).settingsAccount),
+            tiles: [
+              for (final option in accountOptions.options) OptionSettingsTile(option: option),
+            ],
+          ),
       ],
     );
 

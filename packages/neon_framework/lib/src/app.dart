@@ -257,6 +257,10 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
                       NeonProvider<AccountOptions>.value(
                         value: _accountsBloc.getOptionsFor(account),
                       ),
+                      // Expose resolver capabilities of AccountOptions without exposing account options directly.
+                      NeonProvider<AccountOptionsResolver>.value(
+                        value: _accountsBloc.getOptionsFor(account),
+                      ),
                       NeonProvider<AppsBloc>.value(
                         value: appsBloc,
                       ),

@@ -282,7 +282,8 @@ class _AppsBloc extends InteractiveBloc implements AppsBloc {
 
   // coverage:ignore-start
   @override
-  T getAppBloc<T extends Bloc>(AppImplementation<T, dynamic> appImplementation) => appImplementation.getBloc(account);
+  T getAppBloc<T extends Bloc>(AppImplementation<T, dynamic> appImplementation) =>
+      appImplementation.getBloc(account, accountOptions);
 
   @override
   List<Provider<Bloc>> get appBlocProviders =>

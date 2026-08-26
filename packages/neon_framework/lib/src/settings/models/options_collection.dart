@@ -41,20 +41,22 @@ abstract class OptionsCollection implements Exportable, Disposable {
   }
 
   @override
-  MapEntry<String, Object?> export() {
-    final data = Map.fromEntries(options.serialize());
-
-    return MapEntry(storage.id, data);
-  }
+  MapEntry<String, Object?> export() => MapEntry(storage.id, serialize());
 
   @override
   void import(Map<String, Object?> data) {
     final values = data[storage.id] as Map<String, Object?>?;
 
     if (values != null) {
-      options.deserialize(values);
+      deserialize(values);
     }
   }
+
+  /// Serializes the option values without adding an export envelope.
+  Map<String, Object?> serialize() => Map.fromEntries(options.serialize());
+
+  /// Applies option values that have already been extracted from an export envelope.
+  void deserialize(Map<String, Object?> values) => options.deserialize(values);
 }
 
 /// OptionsCollection primarily used by `AppImplementation`s.

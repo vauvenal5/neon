@@ -154,6 +154,15 @@ class AccountSettingsPage extends StatelessWidget {
             ),
           ],
         ),
+        for (final entry in options.appOptions)
+          if (entry.value.options.isNotEmpty)
+            SettingsCategory(
+              // Keep every account-specific option for an app together on the account page.
+              title: Text(entry.key.name(context)),
+              tiles: [
+                for (final option in entry.value.options) OptionSettingsTile(option: option),
+              ],
+            ),
       ],
     );
 

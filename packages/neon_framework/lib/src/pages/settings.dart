@@ -83,6 +83,7 @@ class SettingsPage extends StatelessWidget {
     final globalOptions = NeonProvider.of<GlobalOptions>(context);
     final accountsBloc = NeonProvider.of<AccountsBloc>(context);
     final appImplementations = NeonProvider.of<BuiltSet<AppImplementation>>(context);
+    final accountOptions = NeonProvider.of<AccountOptionsResolver>(context);
     final branding = Branding.of(context);
 
     final appBar = AppBar(
@@ -127,7 +128,9 @@ class SettingsPage extends StatelessWidget {
           key: ValueKey(SettingsCategories.apps.name),
           tiles: <SettingsTile>[
             for (final appImplementation in appImplementations)
-              if (appImplementation.options.options.isNotEmpty)
+              // Keep apps discoverable when they expose only account-specific settings.
+              if (appImplementation.options.options.isNotEmpty ||
+                  (accountOptions.getAppAccountOptions(appImplementation)?.options.isNotEmpty ?? false))
                 CustomSettingsTile(
                   leading: appImplementation.buildIcon(),
                   title: Text(appImplementation.name(context)),

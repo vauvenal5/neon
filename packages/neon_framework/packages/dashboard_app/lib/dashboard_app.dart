@@ -14,7 +14,7 @@ import 'package:neon_framework/models.dart';
 import 'package:nextcloud/dashboard.dart' as dashboard;
 
 /// Implementation of the server `dashboard` app.
-class DashboardApp extends AppImplementation<DashboardBloc, DashboardOptions> {
+class DashboardApp extends NoAccountOptionsAppImplementation<DashboardBloc, DashboardOptions> {
   /// Creates a new Dashboard app implementation instance.
   DashboardApp();
 
@@ -31,7 +31,7 @@ class DashboardApp extends AppImplementation<DashboardBloc, DashboardOptions> {
   late final DashboardOptions options = DashboardOptions(storage);
 
   @override
-  DashboardBloc buildBloc(Account account) => DashboardBloc(
+  DashboardBloc buildBlocWithoutAccountOptions(Account account) => DashboardBloc(
         account: account,
       );
 

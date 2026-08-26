@@ -9,9 +9,28 @@ class PhotosOptions extends AppImplementationOptions {
       generalCategory,
     ];
     super.options = [
-      photosHomePathOption,
       cacheImagesOption,
     ];
+  }
+
+  final generalCategory = OptionsCategory(
+    name: (context) => PhotosLocalizations.of(context).general,
+  );
+
+  late final cacheImagesOption = ToggleOption(
+    storage: super.storage,
+    category: generalCategory,
+    key: PhotosOptionKeys.cacheImages,
+    label: (context) => PhotosLocalizations.of(context).optionsCacheImages,
+    defaultValue: true,
+  );
+}
+
+/// Account-specific Photos settings; each server account has its own home path.
+class PhotosAccountOptions extends AppImplementationOptions {
+  PhotosAccountOptions(super.storage) {
+    super.categories = [generalCategory];
+    super.options = [photosHomePathOption];
   }
 
   final generalCategory = OptionsCategory(
@@ -23,15 +42,8 @@ class PhotosOptions extends AppImplementationOptions {
     category: generalCategory,
     key: PhotosOptionKeys.photosHomePath,
     label: (context) => PhotosLocalizations.of(context).optionsPhotosHomePath,
+    // Keep the account default independent from any path saved for another account.
     defaultValue: webdav.PathUri.cwd(),
-  );
-
-  late final cacheImagesOption = ToggleOption(
-    storage: super.storage,
-    category: generalCategory,
-    key: PhotosOptionKeys.cacheImages,
-    label: (context) => PhotosLocalizations.of(context).optionsCacheImages,
-    defaultValue: true,
   );
 }
 

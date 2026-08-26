@@ -10,9 +10,7 @@ import 'package:neon_framework/src/blocs/maintenance_mode.dart';
 import 'package:neon_framework/src/blocs/unified_search.dart';
 import 'package:neon_framework/src/models/account_cache.dart';
 import 'package:neon_framework/src/models/disposable.dart';
-import 'package:neon_framework/src/storage/keys.dart';
 import 'package:neon_framework/src/utils/account_options.dart';
-import 'package:neon_framework/storage.dart';
 import 'package:rxdart/rxdart.dart';
 
 /// The Bloc responsible for managing the [Account]s
@@ -153,6 +151,8 @@ class _AccountsBloc extends Bloc implements AccountsBloc {
 
   @override
   Future<void> removeAccount(Account account) async {
+    // Retain the options owner across logout events so its app stores can still be cleared.
+    final options = getOptionsFor(account);
     try {
       await _accountRepository.logOut(account.id);
     } on DeleteCredentialsFailure catch (error, stackTrace) {
@@ -162,6 +162,8 @@ class _AccountsBloc extends Bloc implements AccountsBloc {
         stackTrace,
       );
     }
+
+    await options.clearAppOptions();
   }
 
   @override
@@ -179,7 +181,8 @@ class _AccountsBloc extends Bloc implements AccountsBloc {
 
   @override
   AccountOptions getOptionsFor(Account account) => accountsOptions[account] ??= AccountOptions(
-        NeonStorage().settingsStore(StorageKeys.accountOptions, account.id),
+        account: account,
+        appImplementations: allAppImplementations,
       );
 
   @override

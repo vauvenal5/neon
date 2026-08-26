@@ -6,6 +6,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:neon_framework/models.dart';
+import 'package:neon_framework/storage.dart';
 import 'package:photos_app/l10n/localizations.dart';
 import 'package:photos_app/src/blocs/bloc.dart';
 import 'package:photos_app/src/handlers/handlers.dart';
@@ -13,7 +14,7 @@ import 'package:photos_app/src/options.dart';
 import 'package:photos_app/src/pages/main.dart';
 import 'package:photos_app/src/routes.dart';
 
-class PhotosApp extends AppImplementation<PhotosBloc, PhotosOptions> {
+class PhotosApp extends AccountOptionsAppImplementation<PhotosBloc, PhotosOptions, PhotosAccountOptions> {
   PhotosApp();
 
   static const String appID = "photos";
@@ -34,8 +35,12 @@ class PhotosApp extends AppImplementation<PhotosBloc, PhotosOptions> {
   late final PhotosOptions options = PhotosOptions(storage);
 
   @override
-  PhotosBloc buildBloc(Account account) => PhotosBloc(
+  PhotosAccountOptions buildAccountOptions(Account account, SettingsStore storage) => PhotosAccountOptions(storage);
+
+  @override
+  PhotosBloc buildBlocWithAccountOptions(Account account, PhotosAccountOptions accountOptions) => PhotosBloc(
         options: options,
+        accountOptions: accountOptions,
         account: account,
       );
 

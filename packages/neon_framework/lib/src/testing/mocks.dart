@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart';
 import 'package:http/testing.dart';
+
 // ignore: depend_on_referenced_packages
 import 'package:mocktail/mocktail.dart';
 import 'package:neon_framework/blocs.dart';
@@ -18,9 +19,11 @@ import 'package:neon_framework/src/utils/account_options.dart';
 import 'package:neon_framework/storage.dart';
 import 'package:neon_framework/testing.dart';
 import 'package:nextcloud/provisioning_api.dart' as provisioning_api;
+
 // ignore: depend_on_referenced_packages
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+
 // ignore: depend_on_referenced_packages
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
@@ -46,6 +49,9 @@ class MockAccountCache<T extends Disposable> extends Mock implements AccountCach
 
 class MockAppImplementation<T extends Bloc, R extends AppImplementationOptions> extends Mock
     implements AppImplementation<T, R> {}
+
+class MockAccountOptionsAppImplementation<T extends Bloc, R extends AppImplementationOptions,
+    A extends AppImplementationOptions> extends Mock implements AccountOptionsAppImplementation<T, R, A> {}
 
 class MockAccountsBloc extends Mock implements AccountsBloc {}
 

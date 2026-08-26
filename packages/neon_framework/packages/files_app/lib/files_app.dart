@@ -14,7 +14,7 @@ import 'package:go_router/go_router.dart';
 import 'package:neon_framework/models.dart';
 import 'package:nextcloud/files.dart' as files;
 
-class FilesApp extends AppImplementation<FilesBloc, FilesOptions> {
+class FilesApp extends NoAccountOptionsAppImplementation<FilesBloc, FilesOptions> {
   FilesApp();
 
   @override
@@ -30,7 +30,7 @@ class FilesApp extends AppImplementation<FilesBloc, FilesOptions> {
   late final FilesOptions options = FilesOptions(storage);
 
   @override
-  FilesBloc buildBloc(Account account) => FilesBloc(
+  FilesBloc buildBlocWithoutAccountOptions(Account account) => FilesBloc(
         options: options,
         account: account,
       );
