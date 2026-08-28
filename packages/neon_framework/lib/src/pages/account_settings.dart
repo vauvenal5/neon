@@ -5,6 +5,7 @@ import 'package:meta/meta.dart';
 import 'package:neon_framework/models.dart';
 import 'package:neon_framework/src/bloc/result.dart';
 import 'package:neon_framework/src/blocs/accounts.dart';
+import 'package:neon_framework/src/blocs/apps.dart';
 import 'package:neon_framework/src/router.dart';
 import 'package:neon_framework/src/settings/widgets/custom_settings_tile.dart';
 import 'package:neon_framework/src/settings/widgets/option_settings_tile.dart';
@@ -34,6 +35,7 @@ class AccountSettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final bloc = NeonProvider.of<AccountsBloc>(context);
     final options = bloc.getOptionsFor(account);
+    final appsBloc = bloc.getAppsBlocFor(account);
     final userDetailsBloc = bloc.getUserDetailsBlocFor(account);
     final name = account.humanReadableID;
 
@@ -173,8 +175,13 @@ class AccountSettingsPage extends StatelessWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: NeonDialogTheme.of(context).constraints,
-            child: Provider<Account>.value(
-              value: account,
+            child: MultiProvider(
+              // Scope capability handlers and their app blocs to the account being edited.
+              providers: [
+                Provider<Account>.value(value: account),
+                NeonProvider<AppsBloc>.value(value: appsBloc),
+                ...appsBloc.appBlocProviders,
+              ],
               child: body,
             ),
           ),
