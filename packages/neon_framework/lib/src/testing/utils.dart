@@ -18,6 +18,7 @@ class TestApp extends StatelessWidget {
     this.localizationsDelegates,
     this.supportedLocales,
     this.appThemes,
+    this.useNextcloudTheme = false,
     this.locale = const Locale('en'),
     this.wrapMaterial = true,
     this.providers = const [],
@@ -57,6 +58,9 @@ class TestApp extends StatelessWidget {
   /// Additional [ThemeExtension]s.
   final List<ThemeExtension>? appThemes;
 
+  /// Whether server-provided colors should be used by the test theme.
+  final bool useNextcloudTheme;
+
   /// {@macro flutter.widgets.widgetsApp.locale}
   final Locale locale;
 
@@ -74,6 +78,7 @@ class TestApp extends StatelessWidget {
     final theme = AppTheme.test(
       platform: platform,
       appThemes: appThemes,
+      useNextcloudTheme: useNextcloudTheme,
     );
 
     var child = this.child;
@@ -88,21 +93,25 @@ class TestApp extends StatelessWidget {
       );
     }
 
-    final app = MaterialApp(
-      theme: theme.lightTheme,
-      localizationsDelegates: [
-        ...NeonLocalizations.localizationsDelegates,
-        ...?localizationsDelegates,
-      ],
-      supportedLocales: [
-        ...NeonLocalizations.supportedLocales,
-        ...?supportedLocales,
-      ],
-      locale: locale,
-      navigatorObservers: [
-        if (navigatorObserver != null) navigatorObserver!,
-      ],
-      home: child,
+    final app = Provider<AppTheme>.value(
+      // Match the production app so routed widgets can derive account-local themes in tests.
+      value: theme,
+      child: MaterialApp(
+        theme: theme.lightTheme,
+        localizationsDelegates: [
+          ...NeonLocalizations.localizationsDelegates,
+          ...?localizationsDelegates,
+        ],
+        supportedLocales: [
+          ...NeonLocalizations.supportedLocales,
+          ...?supportedLocales,
+        ],
+        locale: locale,
+        navigatorObservers: [
+          if (navigatorObserver != null) navigatorObserver!,
+        ],
+        home: child,
+      ),
     );
 
     if (providers.isNotEmpty) {

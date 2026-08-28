@@ -6,12 +6,15 @@ import 'package:neon_framework/models.dart';
 import 'package:neon_framework/src/bloc/result.dart';
 import 'package:neon_framework/src/blocs/accounts.dart';
 import 'package:neon_framework/src/blocs/apps.dart';
+import 'package:neon_framework/src/blocs/capabilities.dart';
 import 'package:neon_framework/src/router.dart';
 import 'package:neon_framework/src/settings/widgets/custom_settings_tile.dart';
 import 'package:neon_framework/src/settings/widgets/option_settings_tile.dart';
 import 'package:neon_framework/src/settings/widgets/settings_category.dart';
 import 'package:neon_framework/src/settings/widgets/settings_list.dart';
 import 'package:neon_framework/src/theme/dialog.dart';
+import 'package:neon_framework/src/theme/server.dart';
+import 'package:neon_framework/src/theme/theme.dart';
 import 'package:neon_framework/src/widgets/dialog.dart';
 import 'package:neon_framework/src/widgets/error.dart';
 import 'package:neon_framework/utils.dart';
@@ -34,9 +37,70 @@ class AccountSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bloc = NeonProvider.of<AccountsBloc>(context);
-    final options = bloc.getOptionsFor(account);
     final appsBloc = bloc.getAppsBlocFor(account);
+    final capabilitiesBloc = bloc.getCapabilitiesBlocFor(account);
+
+    return MultiProvider(
+      // Scope the complete route so its app bar, dialogs, and capability handlers use the edited account.
+      providers: [
+        Provider<Account>.value(value: account),
+        NeonProvider<AppsBloc>.value(value: appsBloc),
+        NeonProvider<CapabilitiesBloc>.value(value: capabilitiesBloc),
+        ...appsBloc.appBlocProviders,
+      ],
+      child: _AccountSettingsTheme(
+        capabilitiesBloc: capabilitiesBloc,
+        child: _AccountSettingsContent(account: account),
+      ),
+    );
+  }
+}
+
+class _AccountSettingsTheme extends StatelessWidget {
+  const _AccountSettingsTheme({
+    required this.capabilitiesBloc,
+    required this.child,
+  });
+
+  final CapabilitiesBloc capabilitiesBloc;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ResultBuilder.behaviorSubject(
+        subject: capabilitiesBloc.capabilities,
+        builder: (context, capabilities) {
+          final appTheme = context.read<AppTheme>();
+          final brightness = Theme.of(context).brightness;
+          final currentTheme = appTheme.themeFor(brightness);
+          final theme = capabilities.hasData
+              ? appTheme.themeFor(
+                  brightness,
+                  serverTheme: ServerTheme(
+                    nextcloudTheme: capabilities.data!.capabilities.themingPublicCapabilities?.theming,
+                  ),
+                )
+              : currentTheme;
+
+          // Retain the current theme while loading, then smoothly apply the edited account's server colors.
+          return AnimatedTheme(
+            data: theme,
+            child: child,
+          );
+        },
+      );
+}
+
+class _AccountSettingsContent extends StatelessWidget {
+  const _AccountSettingsContent({required this.account});
+
+  final Account account;
+
+  @override
+  Widget build(BuildContext context) {
+    final bloc = NeonProvider.of<AccountsBloc>(context);
+    final options = bloc.getOptionsFor(account);
     final userDetailsBloc = bloc.getUserDetailsBlocFor(account);
+    final capabilitiesBloc = NeonProvider.of<CapabilitiesBloc>(context);
     final name = account.humanReadableID;
 
     final appBar = AppBar(
@@ -48,7 +112,7 @@ class AccountSettingsPage extends StatelessWidget {
               context: context,
               builder: (context) => NeonAccountDeletionDialog(
                 account: account,
-                capabilitiesBloc: bloc.getCapabilitiesBlocFor(account),
+                capabilitiesBloc: capabilitiesBloc,
               ),
             );
 
@@ -175,15 +239,7 @@ class AccountSettingsPage extends StatelessWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: NeonDialogTheme.of(context).constraints,
-            child: MultiProvider(
-              // Scope capability handlers and their app blocs to the account being edited.
-              providers: [
-                Provider<Account>.value(value: account),
-                NeonProvider<AppsBloc>.value(value: appsBloc),
-                ...appsBloc.appBlocProviders,
-              ],
-              child: body,
-            ),
+            child: body,
           ),
         ),
       ),
