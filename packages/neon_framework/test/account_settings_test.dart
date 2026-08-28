@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:neon_framework/models.dart';
@@ -10,8 +11,10 @@ import 'package:neon_framework/src/pages/account_settings.dart';
 import 'package:neon_framework/src/settings/widgets/option_settings_tile.dart';
 import 'package:neon_framework/src/utils/account_options.dart';
 import 'package:neon_framework/src/utils/provider.dart';
+import 'package:neon_framework/src/widgets/dialog.dart';
 import 'package:neon_framework/storage.dart';
 import 'package:neon_framework/testing.dart';
+import 'package:nextcloud/core.dart' as core;
 import 'package:nextcloud/provisioning_api.dart' as provisioning_api;
 import 'package:nextcloud/webdav.dart' as webdav;
 import 'package:provider/provider.dart';
@@ -48,6 +51,66 @@ class _SelectingDirectoryHandler extends AppCapabilityHandler {
   }
 }
 
+core.ThemingPublicCapabilities_Theming _buildServerTheme(String color) => core.ThemingPublicCapabilities_Theming(
+      (b) => b
+        ..name = 'Edited account'
+        ..url = 'https://edited.example.com'
+        ..slogan = ''
+        ..color = color
+        ..colorText = '#ffffff'
+        ..colorElement = color
+        ..colorElementBright = color
+        ..colorElementDark = color
+        ..logo = ''
+        ..background = 'ignored-background.png'
+        ..backgroundText = '#ffffff'
+        ..backgroundPlain = false
+        ..backgroundDefault = false
+        ..logoheader = ''
+        ..favicon = '',
+    );
+
+core.OcsGetCapabilitiesResponseApplicationJson_Ocs_Data _buildCapabilities(
+  core.ThemingPublicCapabilities_Theming? theme,
+) =>
+    core.OcsGetCapabilitiesResponseApplicationJson_Ocs_Data(
+      (b) => b
+        ..version.update(
+          (b) => b
+            ..major = 0
+            ..minor = 0
+            ..micro = 0
+            ..string = ''
+            ..edition = ''
+            ..extendedSupport = false,
+        )
+        ..capabilities = (
+          commentsCapabilities: core.CommentsCapabilities((b) => b..files.update((b) => b..comments = true)),
+          coreCapabilities: null,
+          corePublicCapabilities: null,
+          davCapabilities: null,
+          dropAccountCapabilities: null,
+          filesCapabilities: null,
+          filesSharingCapabilities: null,
+          filesTrashbinCapabilities: null,
+          filesVersionsCapabilities: null,
+          notesCapabilities: null,
+          notificationsCapabilities: null,
+          passwordPolicyCapabilities: null,
+          provisioningApiCapabilities: null,
+          sharebymailCapabilities: null,
+          spreedCapabilities: null,
+          spreedPublicCapabilities: null,
+          systemtagsCapabilities: null,
+          tablesCapabilities: null,
+          termsOfServicePublicCapabilities: null,
+          themingPublicCapabilities:
+              theme == null ? null : core.ThemingPublicCapabilities((b) => b..theming.replace(theme)),
+          userStatusCapabilities: null,
+          weatherStatusCapabilities: null,
+        ),
+    );
+
 void main() {
   setUpAll(() {
     registerFallbackValue(_BuildContextFake());
@@ -62,11 +125,15 @@ void main() {
     final editedAppsBloc = MockAppsBloc();
     final accountsBloc = MockAccountsBloc();
     final accountOptions = MockAccountOptions();
+    final capabilitiesBloc = MockCapabilitiesBloc();
     final userDetailsBloc = MockUserDetailsBloc();
     final app = MockAccountOptionsAppImplementation();
     final appOptions = MockAppImplementationOptions();
     final storage = MockStorage();
     final userDetails = BehaviorSubject<Result<provisioning_api.UserDetails>>.seeded(Result.error('unavailable'));
+    final capabilities = BehaviorSubject<Result<core.OcsGetCapabilitiesResponseApplicationJson_Ocs_Data>>.seeded(
+      Result.loading(),
+    );
     final selection = webdav.PathUri.parse('Photos/Selected');
     final handler = _SelectingDirectoryHandler(account: editedAccount, selection: selection);
 
@@ -95,7 +162,9 @@ void main() {
     when(() => userDetailsBloc.userDetails).thenAnswer((_) => userDetails);
     when(() => accountsBloc.getOptionsFor(editedAccount)).thenReturn(accountOptions);
     when(() => accountsBloc.getAppsBlocFor(editedAccount)).thenReturn(editedAppsBloc);
+    when(() => accountsBloc.getCapabilitiesBlocFor(editedAccount)).thenReturn(capabilitiesBloc);
     when(() => accountsBloc.getUserDetailsBlocFor(editedAccount)).thenReturn(userDetailsBloc);
+    when(() => capabilitiesBloc.capabilities).thenAnswer((_) => capabilities);
     when(() => editedAppsBloc.appBlocProviders).thenReturn([]);
     when(() => editedAppsBloc.findAppCapabilityHandler(any())).thenReturn(handler);
 
@@ -120,7 +189,80 @@ void main() {
     verifyNever(() => accountsBloc.setActiveAccount(any()));
 
     await userDetails.close();
+    await capabilities.close();
     initialAppOption.dispose();
     pathOption.dispose();
+  });
+
+  testWidgets('page and dialogs switch to the edited account theme when capabilities arrive', (tester) async {
+    final activeAccount = MockAccount(username: 'active');
+    final editedAccount = MockAccount(username: 'edited');
+    final accountsBloc = MockAccountsBloc();
+    final appsBloc = MockAppsBloc();
+    final capabilitiesBloc = MockCapabilitiesBloc();
+    final accountOptions = MockAccountOptions();
+    final userDetailsBloc = MockUserDetailsBloc();
+    final storage = MockStorage();
+    final userDetails = BehaviorSubject<Result<provisioning_api.UserDetails>>.seeded(Result.error('unavailable'));
+    final capabilities = BehaviorSubject<Result<core.OcsGetCapabilitiesResponseApplicationJson_Ocs_Data>>.seeded(
+      Result.loading(),
+    );
+    when(() => storage.getString(AccountOptionKeys.initialApp.value)).thenReturn(null);
+    final initialAppOption = SelectOption<String?>(
+      storage: storage,
+      key: AccountOptionKeys.initialApp,
+      label: (_) => 'Initial app',
+      defaultValue: null,
+      values: const {},
+    );
+
+    // Supply only the aggregate settings used by this theme-focused widget test.
+    when(() => accountOptions.initialApp).thenReturn(initialAppOption);
+    when(() => accountOptions.appOptions).thenReturn([]);
+    when(() => appsBloc.appBlocProviders).thenReturn([]);
+    when(() => userDetailsBloc.userDetails).thenAnswer((_) => userDetails);
+    when(() => capabilitiesBloc.capabilities).thenAnswer((_) => capabilities);
+    when(() => accountsBloc.getOptionsFor(editedAccount)).thenReturn(accountOptions);
+    when(() => accountsBloc.getAppsBlocFor(editedAccount)).thenReturn(appsBloc);
+    when(() => accountsBloc.getCapabilitiesBlocFor(editedAccount)).thenReturn(capabilitiesBloc);
+    when(() => accountsBloc.getUserDetailsBlocFor(editedAccount)).thenReturn(userDetailsBloc);
+
+    await tester.pumpWidget(
+      TestApp(
+        useNextcloudTheme: true,
+        providers: [
+          NeonProvider<AccountsBloc>.value(value: accountsBloc),
+          Provider<Account>.value(value: activeAccount),
+        ],
+        child: AccountSettingsPage(account: editedAccount),
+      ),
+    );
+    await tester.pump();
+
+    final initialColor = Theme.of(tester.element(find.byType(Scaffold))).colorScheme.primary;
+    const editedColor = Color(0xffc2185b);
+    expect(initialColor.toARGB32(), isNot(editedColor.toARGB32()));
+
+    capabilities.add(Result.success(_buildCapabilities(_buildServerTheme('#c2185b'))));
+    await tester.pumpAndSettle();
+
+    expect(
+      Theme.of(tester.element(find.byType(Scaffold))).colorScheme.primary.toARGB32(),
+      editedColor.toARGB32(),
+    );
+
+    await tester.tap(find.byIcon(MdiIcons.cogRefresh));
+    await tester.pumpAndSettle();
+
+    // Dialog routes capture the local inherited theme from the edited account settings page.
+    expect(
+      Theme.of(tester.element(find.byType(NeonConfirmationDialog))).colorScheme.primary.toARGB32(),
+      editedColor.toARGB32(),
+    );
+    verifyNever(() => accountsBloc.setActiveAccount(any()));
+
+    await capabilities.close();
+    await userDetails.close();
+    initialAppOption.dispose();
   });
 }

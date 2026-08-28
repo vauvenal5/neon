@@ -229,20 +229,24 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
                   neonTheme: widget.neonTheme,
                 );
 
-                final app = MaterialApp.router(
-                  debugShowCheckedModeBanner: false,
-                  localizationsDelegates: [
-                    ..._appImplementations.map((app) => app.localizationsDelegate),
-                    ...NeonLocalizations.localizationsDelegates,
-                  ],
-                  supportedLocales: {
-                    ..._appImplementations.map((app) => app.supportedLocales).expand((element) => element),
-                    ...NeonLocalizations.supportedLocales,
-                  },
-                  themeMode: options.themeMode.value,
-                  theme: appTheme.lightTheme,
-                  darkTheme: appTheme.darkTheme,
-                  routerConfig: _routerDelegate,
+                final app = Provider<AppTheme>.value(
+                  // Routed pages reuse the active theme inputs when applying account-local server colors.
+                  value: appTheme,
+                  child: MaterialApp.router(
+                    debugShowCheckedModeBanner: false,
+                    localizationsDelegates: [
+                      ..._appImplementations.map((app) => app.localizationsDelegate),
+                      ...NeonLocalizations.localizationsDelegates,
+                    ],
+                    supportedLocales: {
+                      ..._appImplementations.map((app) => app.supportedLocales).expand((element) => element),
+                      ...NeonLocalizations.supportedLocales,
+                    },
+                    themeMode: options.themeMode.value,
+                    theme: appTheme.lightTheme,
+                    darkTheme: appTheme.darkTheme,
+                    routerConfig: _routerDelegate,
+                  ),
                 );
 
                 if (activeAccountSnapshot.hasData) {

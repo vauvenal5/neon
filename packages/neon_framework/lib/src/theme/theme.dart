@@ -64,12 +64,12 @@ class AppTheme {
   @visibleForTesting
   final TargetPlatform? platform;
 
-  ColorScheme _buildColorScheme(Brightness brightness) {
+  ColorScheme _buildColorScheme(Brightness brightness, ServerTheme effectiveServerTheme) {
     ColorScheme? colorScheme;
 
-    if (serverTheme.nextcloudTheme != null && useNextcloudTheme) {
-      final primaryColor = HexColor(serverTheme.nextcloudTheme!.color);
-      final onPrimaryColor = HexColor(serverTheme.nextcloudTheme!.colorText);
+    if (effectiveServerTheme.nextcloudTheme != null && useNextcloudTheme) {
+      final primaryColor = HexColor(effectiveServerTheme.nextcloudTheme!.color);
+      final onPrimaryColor = HexColor(effectiveServerTheme.nextcloudTheme!.colorText);
 
       colorScheme = ColorScheme.fromSeed(
         seedColor: primaryColor,
@@ -100,8 +100,11 @@ class AppTheme {
     return colorScheme;
   }
 
-  ThemeData _getTheme(Brightness brightness) {
-    final colorScheme = _buildColorScheme(brightness);
+  /// Builds a theme for [brightness], optionally using another account's server theme.
+  ThemeData themeFor(Brightness brightness, {ServerTheme? serverTheme}) {
+    // Reuse every global theme input while allowing account settings to override only server colors.
+    final effectiveServerTheme = serverTheme ?? this.serverTheme;
+    final colorScheme = _buildColorScheme(brightness, effectiveServerTheme);
 
     return ThemeData(
       useMaterial3: true,
@@ -124,7 +127,7 @@ class AppTheme {
         textTheme: const CupertinoTextThemeData(),
       ),
       extensions: [
-        serverTheme,
+        effectiveServerTheme,
         neonTheme,
         ...?appThemes,
       ],
@@ -134,12 +137,12 @@ class AppTheme {
   /// Returns a new theme for [Brightness.light].
   ///
   /// Used in [MaterialApp.theme].
-  ThemeData get lightTheme => _getTheme(Brightness.light);
+  ThemeData get lightTheme => themeFor(Brightness.light);
 
   /// Returns a new theme for [Brightness.dark].
   ///
   /// Used in [MaterialApp.darkTheme].
-  ThemeData get darkTheme => _getTheme(Brightness.dark);
+  ThemeData get darkTheme => themeFor(Brightness.dark);
 
   static const _snackBarTheme = SnackBarThemeData(
     behavior: SnackBarBehavior.floating,
