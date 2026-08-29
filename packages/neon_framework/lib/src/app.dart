@@ -212,6 +212,7 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
           builder: (context, activeAccountSnapshot) {
             FlutterNativeSplash.remove();
             return ResultBuilder.behaviorSubject(
+              key: ValueKey(activeAccountSnapshot.data?.id),
               subject: activeAccountSnapshot.hasData
                   ? _accountsBloc.getCapabilitiesBlocFor(activeAccountSnapshot.data!).capabilities
                   : null,
