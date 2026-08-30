@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:account_repository/account_repository.dart';
 import 'package:cookie_store/cookie_store.dart';
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
+import 'package:neon_framework/src/platform/platform.dart';
+import 'package:neon_framework/src/storage/cache_storage.dart';
 import 'package:neon_framework/src/storage/keys.dart';
 import 'package:neon_framework/src/storage/request_cache.dart';
 import 'package:neon_framework/src/storage/settings_store.dart';
@@ -53,6 +56,11 @@ class NeonStorage {
       await SQLiteCookiePersistence.init();
     }
 
+    if (NeonPlatform.instance.canUsePaths) {
+      // Share account handles through one manager so every caller coordinates access to the same filesystem path.
+      _cacheStorageManager = NeonCacheStorageManager();
+    }
+
     await SQLiteCachedPersistence.init();
 
     _initialized = true;
@@ -66,6 +74,16 @@ class NeonStorage {
     _assertInitialized();
 
     return _requestCache;
+  }
+
+  /// Account- and app-scoped filesystem cache, if supported by the platform.
+  NeonCacheStorageManager? _cacheStorageManager;
+
+  /// Returns the filesystem cache for [account], if paths are supported by the current platform.
+  NeonCacheStorage? cacheStorageFor(Account account) {
+    _assertInitialized();
+    // Keep manager ownership private so callers can only access their account-specific handle.
+    return _cacheStorageManager?.forAccount(account);
   }
 
   /// Initializes a new `SettingsStorage`.

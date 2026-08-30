@@ -9,11 +9,12 @@ import 'package:logging/logging.dart';
 import 'package:neon_framework/blocs.dart';
 import 'package:neon_framework/models.dart';
 import 'package:neon_framework/platform.dart';
+import 'package:neon_framework/storage.dart';
 import 'package:neon_framework/utils.dart';
+import 'package:nextcloud/files.dart' as files;
 import 'package:nextcloud/webdav.dart' as webdav;
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:queue/queue.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:share_plus/share_plus.dart';
@@ -24,6 +25,7 @@ sealed class FilesBloc implements InteractiveBloc {
   factory FilesBloc({
     required FilesOptions options,
     required Account account,
+    required NeonCacheStorage? cacheStorage,
   }) = _FilesBloc;
 
   void uploadFile(webdav.PathUri uri, String localPath);
@@ -71,6 +73,7 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
   _FilesBloc({
     required this.options,
     required this.account,
+    required this.cacheStorage,
   }) {
     options.uploadQueueParallelism.addListener(uploadParallelismListener);
     options.downloadQueueParallelism.addListener(downloadParallelismListener);
@@ -81,6 +84,7 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
 
   final FilesOptions options;
   final Account account;
+  final NeonCacheStorage? cacheStorage;
 
   final uploadQueue = Queue();
   final downloadQueue = Queue();
@@ -207,11 +211,12 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
     await wrapAction(
       () async {
         if (NeonPlatform.instance.canUsePaths) {
-          final file = await cacheFile(uri, etag);
-          final result = await OpenFilex.open(file.path, type: mimeType);
-          if (result.type != ResultType.done) {
-            throw const UnableToOpenFileException();
-          }
+          await _useCachedFile(uri, etag, (file) async {
+            final result = await OpenFilex.open(file.path, type: mimeType);
+            if (result.type != ResultType.done) {
+              throw const UnableToOpenFileException();
+            }
+          });
         } else {
           final bytes = await downloadMemory(uri);
           await NeonPlatform.instance.saveFileWithPickDialog(uri.name, mimeType ?? 'application/octet-stream', bytes);
@@ -228,8 +233,11 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
     await wrapAction(
       () async {
         if (NeonPlatform.instance.canUsePaths) {
-          final file = await cacheFile(uri, etag);
-          await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], attach: attach));
+          await _useCachedFile(
+            uri,
+            etag,
+            (file) => SharePlus.instance.share(ShareParams(files: [XFile(file.path)], attach: attach)),
+          );
         } else {
           throw UnimplementedError('Sharing is not supported on web');
         }
@@ -292,11 +300,15 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
 
   @override
   Future<void> refetchFile(webdav.PathUri uri, String etag) async {
-    final file = await _getLocalCacheFile(uri, etag);
+    if (cacheStorage != null) {
+      await _useCache((directory) async {
+        final file = _getLocalCacheFile(directory, uri, etag);
 
-    if(file.existsSync()) {
-      log.fine("Deleting cached file for $uri since it is being refetched");
-      await file.delete();
+        if (file.existsSync()) {
+          log.fine('Deleting cached file for $uri since it is being refetched');
+          await file.delete();
+        }
+      });
     }
 
     refetchTasks.add(FilesRefetchTask(uri: uri));
@@ -305,30 +317,41 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
   @override
   Future<Uint8List> fetchFile(webdav.PathUri uri, String etag, {bool cache = true}) async {
     if (NeonPlatform.instance.canUsePaths && cache) {
-      final cachedFile = await cacheFile(uri, etag);
-      return cachedFile.readAsBytes();
+      return _useCachedFile(uri, etag, (file) => file.readAsBytes());
     }
     return downloadMemory(uri);
   }
 
-  Future<File> cacheFile(webdav.PathUri uri, String etag) async {
-    final file = await _getLocalCacheFile(uri, etag);
+  // Keep file consumption inside the callback so clearing cannot delete a returned File before the caller uses it.
+  Future<T> _useCachedFile<T>(webdav.PathUri uri, String etag, Future<T> Function(File file) action) =>
+      _useCache((directory) async {
+        final file = _getLocalCacheFile(directory, uri, etag);
 
-    if (!file.existsSync()) {
-      log.fine('Downloading $uri since it does not exist');
-      if (!file.parent.existsSync()) {
-        await file.parent.create(recursive: true);
-      }
-      await downloadIO(uri, file);
+        if (!file.existsSync()) {
+          log.fine('Downloading $uri since it does not exist');
+          if (!file.parent.existsSync()) {
+            await file.parent.create(recursive: true);
+          }
+          await downloadIO(uri, file);
+        }
+
+        return action(file);
+      });
+
+  Future<T> _useCache<T>(Future<T> Function(Directory directory) action) {
+    final cacheStorage = this.cacheStorage;
+    if (cacheStorage == null) {
+      throw StateError('Filesystem caching is not supported on this platform.');
     }
-
-    return file;
+    // Forward the callback as one coordinated operation so account cache clearing waits for all filesystem work to finish.
+    return cacheStorage.useCache(
+      appID: files.appID,
+      action: action,
+    );
   }
 
-  Future<File> _getLocalCacheFile(webdav.PathUri uri, String etag) async {
-    final cacheDir = await getApplicationCacheDirectory();
-    return File(p.join(cacheDir.path, 'files', etag.replaceAll('"', ''), uri.name));
-  }
+  File _getLocalCacheFile(Directory directory, webdav.PathUri uri, String etag) =>
+      File(p.join(directory.path, etag.replaceAll('"', ''), uri.name));
 
   Future<void> downloadIO(webdav.PathUri uri, File file) async {
     final existingTask = getDownloadTask(uri);

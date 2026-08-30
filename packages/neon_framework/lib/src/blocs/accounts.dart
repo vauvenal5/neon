@@ -11,6 +11,7 @@ import 'package:neon_framework/src/blocs/unified_search.dart';
 import 'package:neon_framework/src/models/account_cache.dart';
 import 'package:neon_framework/src/models/disposable.dart';
 import 'package:neon_framework/src/utils/account_options.dart';
+import 'package:neon_framework/storage.dart';
 import 'package:rxdart/rxdart.dart';
 
 /// The Bloc responsible for managing the [Account]s
@@ -26,7 +27,10 @@ abstract interface class AccountsBloc implements Disposable {
   ///
   /// If [account] is the current [AccountsBloc.activeAccount] it will automatically activate the first one in [AccountsBloc.accounts].
   /// It is not defined whether listeners of [AccountsBloc.accounts] or [AccountsBloc.activeAccount] are informed first.
-  void removeAccount(Account account);
+  Future<void> removeAccount(Account account);
+
+  /// Clears filesystem cache data belonging to the given [account] across all apps.
+  Future<void> clearCachedFiles(Account account);
 
   /// Sets the active [account].
   ///
@@ -163,8 +167,22 @@ class _AccountsBloc extends Bloc implements AccountsBloc {
       );
     }
 
+    try {
+      // Clear the framework-owned account root after logout has disposed app blocs and stopped new cache work.
+      await clearCachedFiles(account);
+    } catch (error, stackTrace) {
+      log.warning(
+        'Error clearing cached files for `${account.id}` during logout.',
+        error,
+        stackTrace,
+      );
+    }
+
     await options.clearAppOptions();
   }
+
+  @override
+  Future<void> clearCachedFiles(Account account) async => NeonStorage().cacheStorageFor(account)?.clear();
 
   @override
   Future<void> setActiveAccount(Account account) async {

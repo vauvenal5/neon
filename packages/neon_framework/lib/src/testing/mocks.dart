@@ -15,6 +15,7 @@ import 'package:neon_framework/src/blocs/accounts.dart';
 import 'package:neon_framework/src/models/account_cache.dart';
 import 'package:neon_framework/src/models/disposable.dart';
 import 'package:neon_framework/src/settings/models/exportable.dart';
+import 'package:neon_framework/src/storage/cache_storage.dart' show NeonCacheStorageManager;
 import 'package:neon_framework/src/utils/account_options.dart';
 import 'package:neon_framework/storage.dart';
 import 'package:neon_framework/testing.dart';
@@ -77,6 +78,8 @@ class MockAppImplementationOptions extends Mock implements AppImplementationOpti
 
 class MockRequestCache extends Mock implements RequestCache {}
 
+class MockNeonCacheStorage extends Mock implements NeonCacheStorage {}
+
 class MockNeonStorage extends Mock implements NeonStorage {
   MockNeonStorage() {
     NeonStorage.mocked(this);
@@ -90,6 +93,11 @@ class FakeNeonStorage extends Fake implements NeonStorage {
 
   @override
   Null get requestCache => null;
+
+  final _cacheStorageManager = NeonCacheStorageManager();
+
+  @override
+  NeonCacheStorage cacheStorageFor(Account account) => _cacheStorageManager.forAccount(account);
 
   @override
   Null cookieStore({required String accountID, required Uri serverURL}) => null;

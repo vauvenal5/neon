@@ -16,6 +16,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:neon_framework/models.dart';
 import 'package:neon_framework/src/bloc/result.dart';
 import 'package:neon_framework/src/blocs/apps.dart';
+import 'package:neon_framework/src/storage/cache_storage.dart' show NeonCacheStorageManager;
 import 'package:neon_framework/src/utils/provider.dart';
 import 'package:neon_framework/src/utils/request_manager.dart';
 import 'package:neon_framework/testing.dart';
@@ -41,8 +42,18 @@ void main() {
     final editedAppsBloc = MockAppsBloc();
     final storage = MockStorage();
     final options = FilesOptions(storage);
-    final activeFilesBloc = FilesBloc(options: options, account: activeAccount);
-    final editedFilesBloc = FilesBloc(options: options, account: editedAccount);
+    // Mirror production by resolving account-specific handles from one shared manager.
+    final cacheStorageManager = NeonCacheStorageManager();
+    final activeFilesBloc = FilesBloc(
+      options: options,
+      account: activeAccount,
+      cacheStorage: cacheStorageManager.forAccount(activeAccount),
+    );
+    final editedFilesBloc = FilesBloc(
+      options: options,
+      account: editedAccount,
+      cacheStorage: cacheStorageManager.forAccount(editedAccount),
+    );
     final requestManager = _MockRequestManager();
 
     when(

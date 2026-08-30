@@ -12,6 +12,7 @@ import 'package:files_app/src/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:neon_framework/models.dart';
+import 'package:neon_framework/storage.dart';
 import 'package:nextcloud/files.dart' as files;
 
 class FilesApp extends NoAccountOptionsAppImplementation<FilesBloc, FilesOptions> {
@@ -33,6 +34,8 @@ class FilesApp extends NoAccountOptionsAppImplementation<FilesBloc, FilesOptions
   FilesBloc buildBlocWithoutAccountOptions(Account account) => FilesBloc(
         options: options,
         account: account,
+        // Resolve the shared account handle so Files operations coordinate with framework clearing.
+        cacheStorage: NeonStorage().cacheStorageFor(account),
       );
 
   @override

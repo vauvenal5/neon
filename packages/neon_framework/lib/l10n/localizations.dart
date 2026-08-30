@@ -709,6 +709,36 @@ abstract class NeonLocalizations {
   /// **'Storage info'**
   String get accountOptionsCategoryStorageInfo;
 
+  /// No description provided for @accountOptionsClearCachedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear cached files'**
+  String get accountOptionsClearCachedFiles;
+
+  /// No description provided for @accountOptionsClearCachedFilesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove downloaded files stored locally for this account'**
+  String get accountOptionsClearCachedFilesSubtitle;
+
+  /// No description provided for @accountOptionsClearCachedFilesConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear cached files for {name}?'**
+  String accountOptionsClearCachedFilesConfirmation(String name);
+
+  /// No description provided for @accountOptionsClearCachedFilesExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Files will be downloaded again when needed.'**
+  String get accountOptionsClearCachedFilesExplanation;
+
+  /// No description provided for @accountOptionsClearCachedFilesSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached files for {name} were cleared.'**
+  String accountOptionsClearCachedFilesSuccess(String name);
+
   /// No description provided for @accountOptionsQuotaUsedOf.
   ///
   /// In en, this message translates to:

@@ -3,6 +3,7 @@
 /// The `NeonStorage` manages all storage backends.
 library;
 
+export 'package:neon_framework/src/storage/cache_storage.dart' show NeonCacheStorage;
 export 'package:neon_framework/src/storage/keys.dart' show Storable;
 export 'package:neon_framework/src/storage/persistence.dart';
 export 'package:neon_framework/src/storage/request_cache.dart' show RequestCache;

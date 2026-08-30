@@ -7,6 +7,7 @@ import 'package:neon_framework/src/bloc/result.dart';
 import 'package:neon_framework/src/blocs/accounts.dart';
 import 'package:neon_framework/src/blocs/apps.dart';
 import 'package:neon_framework/src/blocs/capabilities.dart';
+import 'package:neon_framework/src/platform/platform.dart';
 import 'package:neon_framework/src/router.dart';
 import 'package:neon_framework/src/settings/widgets/custom_settings_tile.dart';
 import 'package:neon_framework/src/settings/widgets/option_settings_tile.dart';
@@ -15,6 +16,7 @@ import 'package:neon_framework/src/settings/widgets/settings_list.dart';
 import 'package:neon_framework/src/theme/dialog.dart';
 import 'package:neon_framework/src/theme/server.dart';
 import 'package:neon_framework/src/theme/theme.dart';
+import 'package:neon_framework/src/widgets/clear_cached_files_tile.dart';
 import 'package:neon_framework/src/widgets/dialog.dart';
 import 'package:neon_framework/src/widgets/error.dart';
 import 'package:neon_framework/utils.dart';
@@ -127,7 +129,7 @@ class _AccountSettingsContent extends StatelessWidget {
                 final isActive = bloc.activeAccount.valueOrNull == account;
 
                 options.reset();
-                bloc.removeAccount(account);
+                await bloc.removeAccount(account);
 
                 if (!context.mounted) {
                   return;
@@ -210,6 +212,11 @@ class _AccountSettingsContent extends StatelessWidget {
                 );
               },
             ),
+            if (NeonPlatform.instance.canUsePaths)
+              ClearCachedFilesTile(
+                account: account,
+                accountsBloc: bloc,
+              ),
           ],
         ),
         SettingsCategory(
