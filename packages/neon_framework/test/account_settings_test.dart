@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:neon_framework/models.dart';
+import 'package:neon_framework/platform.dart';
 import 'package:neon_framework/settings.dart';
 import 'package:neon_framework/src/bloc/result.dart';
 import 'package:neon_framework/src/blocs/accounts.dart';
@@ -112,10 +115,18 @@ core.OcsGetCapabilitiesResponseApplicationJson_Ocs_Data _buildCapabilities(
     );
 
 void main() {
+  late MockNeonPlatform platform;
+
   setUpAll(() {
     registerFallbackValue(_BuildContextFake());
     registerFallbackValue(MockAccount());
     registerFallbackValue(DirectorySelectionCapability(webdav.PathUri.cwd()));
+  });
+
+  setUp(() {
+    platform = MockNeonPlatform();
+    when(() => platform.canUsePaths).thenReturn(false);
+    NeonPlatform.instance = platform;
   });
 
   testWidgets('path selection uses the account being edited', (tester) async {
@@ -260,6 +271,74 @@ void main() {
       editedColor.toARGB32(),
     );
     verifyNever(() => accountsBloc.setActiveAccount(any()));
+
+    await capabilities.close();
+    await userDetails.close();
+    initialAppOption.dispose();
+  });
+
+  testWidgets('clears cached files for the account being edited and reports success', (tester) async {
+    final activeAccount = MockAccount(username: 'active');
+    final editedAccount = MockAccount(username: 'edited');
+    final accountsBloc = MockAccountsBloc();
+    final appsBloc = MockAppsBloc();
+    final capabilitiesBloc = MockCapabilitiesBloc();
+    final accountOptions = MockAccountOptions();
+    final userDetailsBloc = MockUserDetailsBloc();
+    final storage = MockStorage();
+    final clearCompleter = Completer<void>();
+    final userDetails = BehaviorSubject<Result<provisioning_api.UserDetails>>.seeded(Result.error('unavailable'));
+    final capabilities = BehaviorSubject<Result<core.OcsGetCapabilitiesResponseApplicationJson_Ocs_Data>>.seeded(
+      Result.loading(),
+    );
+    when(() => storage.getString(AccountOptionKeys.initialApp.value)).thenReturn(null);
+    final initialAppOption = SelectOption<String?>(
+      storage: storage,
+      key: AccountOptionKeys.initialApp,
+      label: (_) => 'Initial app',
+      defaultValue: null,
+      values: const {},
+    );
+
+    when(() => platform.canUsePaths).thenReturn(true);
+    when(() => accountOptions.initialApp).thenReturn(initialAppOption);
+    when(() => accountOptions.appOptions).thenReturn([]);
+    when(() => appsBloc.appBlocProviders).thenReturn([]);
+    when(() => userDetailsBloc.userDetails).thenAnswer((_) => userDetails);
+    when(() => capabilitiesBloc.capabilities).thenAnswer((_) => capabilities);
+    when(() => accountsBloc.getOptionsFor(editedAccount)).thenReturn(accountOptions);
+    when(() => accountsBloc.getAppsBlocFor(editedAccount)).thenReturn(appsBloc);
+    when(() => accountsBloc.getCapabilitiesBlocFor(editedAccount)).thenReturn(capabilitiesBloc);
+    when(() => accountsBloc.getUserDetailsBlocFor(editedAccount)).thenReturn(userDetailsBloc);
+    when(() => accountsBloc.clearCachedFiles(editedAccount)).thenAnswer((_) => clearCompleter.future);
+
+    await tester.pumpWidget(
+      TestApp(
+        providers: [
+          NeonProvider<AccountsBloc>.value(value: accountsBloc),
+          Provider<Account>.value(value: activeAccount),
+        ],
+        child: AccountSettingsPage(account: editedAccount),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.text('Clear cached files'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('edited'), findsWidgets);
+
+    await tester.tap(find.text('Continue'));
+    await tester.pump();
+
+    verify(() => accountsBloc.clearCachedFiles(editedAccount)).called(1);
+    verifyNever(() => accountsBloc.clearCachedFiles(activeAccount));
+    expect(find.byType(CircularProgressIndicator), findsOne);
+
+    clearCompleter.complete();
+    await tester.pump();
+
+    expect(find.textContaining('were cleared'), findsOne);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
 
     await capabilities.close();
     await userDetails.close();

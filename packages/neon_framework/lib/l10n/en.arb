@@ -201,6 +201,25 @@
     }
   },
   "accountOptionsCategoryStorageInfo": "Storage info",
+  "accountOptionsClearCachedFiles": "Clear cached files",
+  "accountOptionsClearCachedFilesSubtitle": "Remove downloaded files stored locally for this account",
+  "accountOptionsClearCachedFilesConfirmation": "Clear cached files for {name}?",
+  "@accountOptionsClearCachedFilesConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accountOptionsClearCachedFilesExplanation": "Files will be downloaded again when needed.",
+  "accountOptionsClearCachedFilesSuccess": "Cached files for {name} were cleared.",
+  "@accountOptionsClearCachedFilesSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "accountOptionsQuotaUsedOf": "{used} used of {total} ({relative}%)",
   "@accountOptionsQuotaUsedOf": {
     "placeholders": {

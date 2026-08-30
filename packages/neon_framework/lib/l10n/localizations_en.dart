@@ -363,6 +363,25 @@ class NeonLocalizationsEn extends NeonLocalizations {
   String get accountOptionsCategoryStorageInfo => 'Storage info';
 
   @override
+  String get accountOptionsClearCachedFiles => 'Clear cached files';
+
+  @override
+  String get accountOptionsClearCachedFilesSubtitle => 'Remove downloaded files stored locally for this account';
+
+  @override
+  String accountOptionsClearCachedFilesConfirmation(String name) {
+    return 'Clear cached files for $name?';
+  }
+
+  @override
+  String get accountOptionsClearCachedFilesExplanation => 'Files will be downloaded again when needed.';
+
+  @override
+  String accountOptionsClearCachedFilesSuccess(String name) {
+    return 'Cached files for $name were cleared.';
+  }
+
+  @override
   String accountOptionsQuotaUsedOf(String used, String total, String relative) {
     return '$used used of $total ($relative%)';
   }
