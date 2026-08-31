@@ -1,6 +1,14 @@
 {
   "@@locale": "en",
   "general": "General",
+  "recursion": "Photo Discovery",
   "optionsPhotosHomePath": "Media Folder",
-  "optionsCacheImages": "Cache Images"
+  "optionsCacheImages": "Cache Images",
+  "optionsMainRecursionMode": "Media Folder Scanning",
+  "optionsFocusRecursionMode": "Focus View Scanning",
+  "recursionModeEnabled": "Scan subfolder contents.",
+  "recursionModeDisabled": "Scan selected folder only.",
+  "recursionModeAsk": "Ask every time.",
+  "recursionDialogTitle": "Show photos from subfolders?",
+  "recursionDialogContent": "All subfolders will be scanned and discovered photos will also be shown."
 }

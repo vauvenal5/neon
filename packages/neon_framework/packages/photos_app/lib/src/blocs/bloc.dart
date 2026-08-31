@@ -5,7 +5,6 @@ import 'package:photos_app/src/options.dart';
 
 abstract class PhotosBloc implements Bloc {
   factory PhotosBloc({
-    required PhotosOptions options,
     required PhotosAccountOptions accountOptions,
     required Account account,
   }) = _PhotosBloc;
@@ -15,12 +14,10 @@ abstract class PhotosBloc implements Bloc {
 
 class _PhotosBloc extends Bloc implements PhotosBloc {
   _PhotosBloc({
-    required this.options,
     required this.accountOptions,
     required this.account,
   });
 
-  final PhotosOptions options;
   @override
   final PhotosAccountOptions accountOptions;
   final Account account;

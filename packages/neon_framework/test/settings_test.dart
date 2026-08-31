@@ -99,6 +99,31 @@ void main() {
         expect(option.value, isNull);
       });
 
+      testWidgets('SelectOption keeps the previous value when selection is rejected', (tester) async {
+        var selectionCalls = 0;
+        option = SelectOption<SelectValues?>(
+          storage: storage,
+          key: key,
+          label: (_) => 'label',
+          defaultValue: SelectValues.first,
+          values: valuesLabel,
+          onSelected: (context, value) {
+            // Simulate an option-specific confirmation rejecting the proposed settings value.
+            selectionCalls++;
+            return false;
+          },
+        );
+
+        await tester.pumpWidget(TestApp(child: OptionSettingsTile(option: option)));
+        await tester.tap(find.byType(SelectSettingsTile));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('second'));
+        await tester.pumpAndSettle();
+
+        expect(selectionCalls, 1);
+        expect(option.value, SelectValues.first);
+      });
+
       testWidgets('ToggleOption cupertino', (tester) async {
         final widget = TestApp(platform: TargetPlatform.macOS, child: OptionSettingsTile(option: option));
         await tester.pumpWidgetWithAccessibility(widget);

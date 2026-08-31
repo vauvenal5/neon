@@ -61,7 +61,8 @@ import 'localizations_en.dart';
 /// be consistent with the languages listed in the PhotosLocalizations.supportedLocales
 /// property.
 abstract class PhotosLocalizations {
-  PhotosLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  PhotosLocalizations(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -69,7 +70,8 @@ abstract class PhotosLocalizations {
     return Localizations.of<PhotosLocalizations>(context, PhotosLocalizations)!;
   }
 
-  static const LocalizationsDelegate<PhotosLocalizations> delegate = _PhotosLocalizationsDelegate();
+  static const LocalizationsDelegate<PhotosLocalizations> delegate =
+      _PhotosLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -81,7 +83,8 @@ abstract class PhotosLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -97,6 +100,12 @@ abstract class PhotosLocalizations {
   /// **'General'**
   String get general;
 
+  /// No description provided for @recursion.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo Discovery'**
+  String get recursion;
+
   /// No description provided for @optionsPhotosHomePath.
   ///
   /// In en, this message translates to:
@@ -108,18 +117,63 @@ abstract class PhotosLocalizations {
   /// In en, this message translates to:
   /// **'Cache Images'**
   String get optionsCacheImages;
+
+  /// No description provided for @optionsMainRecursionMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Media Folder Scanning'**
+  String get optionsMainRecursionMode;
+
+  /// No description provided for @optionsFocusRecursionMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus View Scanning'**
+  String get optionsFocusRecursionMode;
+
+  /// No description provided for @recursionModeEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan subfolder contents.'**
+  String get recursionModeEnabled;
+
+  /// No description provided for @recursionModeDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan selected folder only.'**
+  String get recursionModeDisabled;
+
+  /// No description provided for @recursionModeAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask every time.'**
+  String get recursionModeAsk;
+
+  /// No description provided for @recursionDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show photos from subfolders?'**
+  String get recursionDialogTitle;
+
+  /// No description provided for @recursionDialogContent.
+  ///
+  /// In en, this message translates to:
+  /// **'All subfolders will be scanned and discovered photos will also be shown.'**
+  String get recursionDialogContent;
 }
 
-class _PhotosLocalizationsDelegate extends LocalizationsDelegate<PhotosLocalizations> {
+class _PhotosLocalizationsDelegate
+    extends LocalizationsDelegate<PhotosLocalizations> {
   const _PhotosLocalizationsDelegate();
 
   @override
   Future<PhotosLocalizations> load(Locale locale) {
-    return SynchronousFuture<PhotosLocalizations>(lookupPhotosLocalizations(locale));
+    return SynchronousFuture<PhotosLocalizations>(
+        lookupPhotosLocalizations(locale));
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_PhotosLocalizationsDelegate old) => false;
@@ -132,7 +186,8 @@ PhotosLocalizations lookupPhotosLocalizations(Locale locale) {
       return PhotosLocalizationsEn();
   }
 
-  throw FlutterError('PhotosLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+  throw FlutterError(
+      'PhotosLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
       'an issue with the localizations generation tool. Please file an issue '
       'on GitHub with a reproducible sample app and the gen-l10n configuration '
       'that was used.');

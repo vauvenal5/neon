@@ -205,6 +205,79 @@ void main() {
     pathOption.dispose();
   });
 
+  testWidgets('rejected path selection keeps the original path without reopening the picker', (tester) async {
+    final editedAccount = MockAccount(username: 'edited');
+    final appsBloc = MockAppsBloc();
+    final accountsBloc = MockAccountsBloc();
+    final accountOptions = MockAccountOptions();
+    final capabilitiesBloc = MockCapabilitiesBloc();
+    final userDetailsBloc = MockUserDetailsBloc();
+    final app = MockAccountOptionsAppImplementation();
+    final appOptions = MockAppImplementationOptions();
+    final storage = MockStorage();
+    final userDetails = BehaviorSubject<Result<provisioning_api.UserDetails>>.seeded(Result.error('unavailable'));
+    final capabilities = BehaviorSubject<Result<core.OcsGetCapabilitiesResponseApplicationJson_Ocs_Data>>.seeded(
+      Result.loading(),
+    );
+    final selection = webdav.PathUri.parse('Photos/Rejected');
+    final handler = _SelectingDirectoryHandler(account: editedAccount, selection: selection);
+
+    when(() => storage.getString(_OptionKey.path.value)).thenReturn(null);
+    when(() => storage.getString(AccountOptionKeys.initialApp.value)).thenReturn(null);
+    when(() => storage.setString(_OptionKey.path.value, any())).thenAnswer((_) async => true);
+
+    final pathOption = PathUriOption(
+      storage: storage,
+      key: _OptionKey.path,
+      label: (_) => 'Photos path',
+      defaultValue: webdav.PathUri.cwd(),
+      onSelected: (context, value) => false,
+    );
+    final initialAppOption = SelectOption<String?>(
+      storage: storage,
+      key: AccountOptionKeys.initialApp,
+      label: (_) => 'Initial app',
+      defaultValue: null,
+      values: const {},
+    );
+
+    when(() => app.name(any())).thenReturn('Photos');
+    when(() => appOptions.options).thenReturn([pathOption]);
+    when(() => accountOptions.initialApp).thenReturn(initialAppOption);
+    when(() => accountOptions.appOptions).thenReturn([MapEntry(app, appOptions)]);
+    when(() => userDetailsBloc.userDetails).thenAnswer((_) => userDetails);
+    when(() => accountsBloc.getOptionsFor(editedAccount)).thenReturn(accountOptions);
+    when(() => accountsBloc.getAppsBlocFor(editedAccount)).thenReturn(appsBloc);
+    when(() => accountsBloc.getCapabilitiesBlocFor(editedAccount)).thenReturn(capabilitiesBloc);
+    when(() => accountsBloc.getUserDetailsBlocFor(editedAccount)).thenReturn(userDetailsBloc);
+    when(() => capabilitiesBloc.capabilities).thenAnswer((_) => capabilities);
+    when(() => appsBloc.appBlocProviders).thenReturn([]);
+    when(() => appsBloc.findAppCapabilityHandler(any())).thenReturn(handler);
+
+    await tester.pumpWidget(
+      TestApp(
+        providers: [
+          NeonProvider<AccountsBloc>.value(value: accountsBloc),
+          Provider<Account>.value(value: editedAccount),
+        ],
+        child: AccountSettingsPage(account: editedAccount),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.byType(PathUriSettingsTile));
+    await tester.pumpAndSettle();
+
+    expect(pathOption.value, webdav.PathUri.cwd());
+    verifyNever(() => storage.setString(_OptionKey.path.value, any()));
+    // Validation rejection completes the interaction after the first directory selection.
+    verify(() => appsBloc.findAppCapabilityHandler(any())).called(1);
+
+    await userDetails.close();
+    await capabilities.close();
+    initialAppOption.dispose();
+    pathOption.dispose();
+  });
+
   testWidgets('page and dialogs switch to the edited account theme when capabilities arrive', (tester) async {
     final activeAccount = MockAccount(username: 'active');
     final editedAccount = MockAccount(username: 'edited');
