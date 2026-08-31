@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show BuildContext;
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:neon_framework/src/models/disposable.dart';
@@ -153,6 +154,7 @@ class SelectOption<T> extends Option<T> {
     required super.label,
     required super.defaultValue,
     required Map<T, LabelBuilder> values,
+    this.onSelected,
 
     /// Force loading the stored value.
     ///
@@ -172,6 +174,7 @@ class SelectOption<T> extends Option<T> {
     required super.defaultValue,
     required Map<T, LabelBuilder> values,
     required super.enabled,
+    this.onSelected,
 
     /// Force loading the stored value.
     ///
@@ -189,6 +192,12 @@ class SelectOption<T> extends Option<T> {
 
     return _deserialize(vs, stored);
   }
+
+  /// Optionally approves a value selected through the settings UI before it is persisted.
+  final FutureOr<bool> Function(BuildContext context, T value)? onSelected;
+
+  /// Invokes [onSelected] without losing the option's runtime generic type in heterogeneous settings lists.
+  FutureOr<bool> approveSelection(BuildContext context, Object? value) => onSelected?.call(context, value as T) ?? true;
 
   @override
   void reset() {
@@ -298,7 +307,7 @@ class ToggleOption extends Option<bool> {
   bool? deserialize(Object? data) => data as bool?;
 }
 
-/// [Option] with a [PathUri] value.
+/// [Option] with a [webdav.PathUri] value.
 class PathUriOption extends Option<webdav.PathUri> {
   /// Creates a PathUriOption
   PathUriOption({
@@ -306,9 +315,13 @@ class PathUriOption extends Option<webdav.PathUri> {
     required super.key,
     required super.label,
     required webdav.PathUri defaultValue,
+    this.onSelected,
     super.category,
     super.enabled,
   }) : super(defaultValue: _loadPathUri(storage.getString(key.value)) ?? defaultValue);
+
+  /// Optionally approves a path selected through the settings UI before it is persisted.
+  final FutureOr<bool> Function(BuildContext context, webdav.PathUri value)? onSelected;
 
   static webdav.PathUri? _loadPathUri(String? stored) {
     if (stored == null) {

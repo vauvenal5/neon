@@ -13,10 +13,12 @@ import 'package:nextcloud/webdav.dart' as webdav;
 class CategoryView extends StatefulWidget {
   CategoryView({
     required this.uri,
+    required this.recursive,
     this.mimeFilter = const MimeFilter.images(),
-  }) : super(key: Key(uri.toString()));
+  }) : super(key: Key('${uri}_$recursive'));
 
   final webdav.PathUri uri;
+  final bool recursive;
   final MimeFilter mimeFilter;
 
   @override
@@ -49,7 +51,8 @@ class _CategoryViewState extends State<CategoryView> {
       uri: widget.uri,
       mode: FilesBrowserMode.browser,
       mimeFilter: widget.mimeFilter,
-      recursive: true,
+      // Recreate the browser when the resolved recursion preference changes.
+      recursive: widget.recursive,
     );
 
     errorsSubscription = bloc.errors.listen((error) {

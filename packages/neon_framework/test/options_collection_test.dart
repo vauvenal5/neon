@@ -89,7 +89,8 @@ void main() {
 
       collection.import(json);
 
-      verify(() => option1.deserialize({'key1': false, 'key2': null})).called(1);
+      // Each option receives only its own serialized value during import.
+      verify(() => option1.deserialize(false)).called(1);
       verify(option2.reset).called(1);
     });
   });

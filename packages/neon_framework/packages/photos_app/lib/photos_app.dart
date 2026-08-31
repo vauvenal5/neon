@@ -17,7 +17,7 @@ import 'package:photos_app/src/routes.dart';
 class PhotosApp extends AccountOptionsAppImplementation<PhotosBloc, PhotosOptions, PhotosAccountOptions> {
   PhotosApp();
 
-  static const String appID = "photos";
+  static const String appID = 'photos';
 
   final ImageHandler _imageHandler = ImageHandler();
   final AlbumHandler _albumHandler = AlbumHandler();
@@ -39,7 +39,6 @@ class PhotosApp extends AccountOptionsAppImplementation<PhotosBloc, PhotosOption
 
   @override
   PhotosBloc buildBlocWithAccountOptions(Account account, PhotosAccountOptions accountOptions) => PhotosBloc(
-        options: options,
         accountOptions: accountOptions,
         account: account,
       );

@@ -34,7 +34,8 @@ extension SerializeOptions on Iterable<Option<dynamic>> {
       }
 
       if (entry.value != null) {
-        final value = option.deserialize(data);
+        // Deserialize the matched entry value rather than passing the complete collection map.
+        final value = option.deserialize(entry.value);
         if (value != null) {
           option.value = value;
         }

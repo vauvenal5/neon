@@ -59,6 +59,18 @@ class SelectSettingsTile<T> extends InputSettingsTile<SelectOption<T>> {
 
   final bool immediateSelection;
 
+  Future<void> select(BuildContext context, T value) async {
+    if (value == option.value) {
+      return;
+    }
+
+    // Let options guard UI-driven changes before the newly selected value is persisted.
+    final accepted = await option.approveSelection(context, value);
+    if (accepted) {
+      option.value = value;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
@@ -77,20 +89,17 @@ class SelectSettingsTile<T> extends InputSettingsTile<SelectOption<T>> {
               await Navigator.push(
                 context,
                 CupertinoPageRoute<void>(
-                  builder: (_) => SelectSettingsTileScreen(option: option),
+                  builder: (_) => SelectSettingsTileScreen(option: option, onSelected: select),
                 ),
               );
             } else {
               final result = await showAdaptiveDialog<({T value})>(
                 context: context,
-                builder: (context) => SelectSettingsTileDialog(
-                  option: option,
-                  immediateSelection: immediateSelection,
-                ),
+                builder: (context) => SelectSettingsTileDialog(option: option, immediateSelection: immediateSelection),
               );
 
-              if (result != null) {
-                option.value = result.value;
+              if (result != null && context.mounted) {
+                await select(context, result.value);
               }
             }
           },
@@ -136,6 +145,7 @@ class _SelectSettingsTileDialogState<T> extends State<SelectSettingsTileDialog<T
   }
 
   void submit() => Navigator.pop(context, (value: value));
+
   void cancel() => Navigator.pop(context);
 
   @override
@@ -197,10 +207,12 @@ class _SelectSettingsTileDialogState<T> extends State<SelectSettingsTileDialog<T
 class SelectSettingsTileScreen<T> extends StatelessWidget {
   const SelectSettingsTileScreen({
     required this.option,
+    required this.onSelected,
     super.key,
   });
 
   final SelectOption<T> option;
+  final Future<void> Function(BuildContext context, T value) onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -221,9 +233,7 @@ class SelectSettingsTileScreen<T> extends StatelessWidget {
               ),
               value: k,
               groupValue: value,
-              onChanged: (value) {
-                option.value = value as T;
-              },
+              onChanged: (value) async => onSelected(context, value as T),
             ),
           ),
         ],
@@ -263,9 +273,15 @@ class PathUriSettingsTile extends InputSettingsTile<PathUriOption> {
         additionalInfo: Text(value.toString()),
         onTap: () async {
           final capability = await appsBloc.handleAppCapability(context, DirectorySelectionCapability(option.value));
-          
-          if (capability?.result != null) {
-            option.value = capability!.result!;
+          final selectedValue = capability?.result;
+          if (!context.mounted || selectedValue == null || selectedValue == option.value) {
+            return;
+          }
+
+          // Rejecting pre-commit validation cancels the proposed path without reopening the picker.
+          final accepted = await option.onSelected?.call(context, selectedValue) ?? true;
+          if (accepted && context.mounted) {
+            option.value = selectedValue;
           }
         },
       ),

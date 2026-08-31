@@ -1,15 +1,16 @@
-
 import 'package:flutter/material.dart';
 import 'package:nextcloud/webdav.dart' as webdav;
 import 'package:photos_app/src/widgets/category.dart';
 
 class AlbumPage extends StatelessWidget {
   const AlbumPage({
-    super.key,
     required this.uri,
+    required this.recursive,
+    super.key,
   });
 
   final webdav.PathUri uri;
+  final bool recursive;
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +20,7 @@ class AlbumPage extends StatelessWidget {
       ),
       body: CategoryView(
         uri: uri,
+        recursive: recursive,
       ),
     );
   }
