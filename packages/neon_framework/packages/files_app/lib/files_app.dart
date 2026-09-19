@@ -16,7 +16,11 @@ import 'package:neon_framework/storage.dart';
 import 'package:nextcloud/files.dart' as files;
 
 class FilesApp extends NoAccountOptionsAppImplementation<FilesBloc, FilesOptions> {
-  FilesApp();
+  FilesApp({
+    this.mimeAppConfig = const MimeFilter.files(),
+  });
+
+  final MimeFilter mimeAppConfig;
 
   @override
   final String id = files.appID;
@@ -28,7 +32,7 @@ class FilesApp extends NoAccountOptionsAppImplementation<FilesBloc, FilesOptions
   final List<Locale> supportedLocales = FilesLocalizations.supportedLocales;
 
   @override
-  late final FilesOptions options = FilesOptions(storage);
+  late final FilesOptions options = FilesOptions(storage, appConfigMimeFilter: mimeAppConfig);
 
   @override
   FilesBloc buildBlocWithoutAccountOptions(Account account) => FilesBloc(

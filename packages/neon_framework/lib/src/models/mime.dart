@@ -15,6 +15,9 @@ class MimeFilter {
   /// A [MimeFilter] which allows only MIME types starting with "image/" and hides directories.
   const MimeFilter.images() : this(activeMimeRegex: 'image/.*', showDirectories: false);
 
+  /// A [MimeFilter] which allows only MIME types starting with "image/" and directories.
+  const MimeFilter.gallery() : this(activeMimeRegex: 'image/.*', showDirectories: true);
+
   /// Regex pattern defining the active MIME types.
   final String activeMimeRegex;
 
