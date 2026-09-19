@@ -1,11 +1,12 @@
 import 'package:files_app/l10n/localizations.dart';
 import 'package:filesize/filesize.dart';
+import 'package:neon_framework/models.dart';
 import 'package:neon_framework/settings.dart';
 import 'package:neon_framework/sort_box.dart';
 import 'package:neon_framework/storage.dart';
 
 class FilesOptions extends AppImplementationOptions {
-  FilesOptions(super.storage) {
+  FilesOptions(super.storage, {required this.appConfigMimeFilter}) {
     super.categories = [
       generalCategory,
     ];
@@ -19,6 +20,8 @@ class FilesOptions extends AppImplementationOptions {
       downloadSizeWarning,
     ];
   }
+
+  final MimeFilter appConfigMimeFilter;
 
   final generalCategory = OptionsCategory(
     name: (context) => FilesLocalizations.of(context).general,
