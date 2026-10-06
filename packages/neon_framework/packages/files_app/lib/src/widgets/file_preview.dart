@@ -1,6 +1,8 @@
 import 'package:files_app/src/blocs/files.dart';
 import 'package:files_app/src/models/file_details.dart';
+import 'package:files_app/src/utils/task.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:neon_framework/models.dart';
 import 'package:neon_framework/theme.dart';
 import 'package:neon_framework/utils.dart';
@@ -23,6 +25,38 @@ class FilePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget icon = Center(
+      child: StreamBuilder(
+        stream: bloc.downloadTasks.where((task) => task != null && task.uri == details.uri),
+        initialData: bloc.getTask(details.uri),
+        builder: (context, task) {
+          return task.hasData ? _buildProgressIndicator(context, task.data!) : _buildPreview(context);
+        },
+      ),
+    );
+
+    if (details.isFavorite ?? false) {
+      icon = Stack(
+        children: [
+          icon,
+          Align(
+            alignment: Alignment.topRight,
+            child: Icon(
+              AdaptiveIcons.star,
+              color: Colors.yellow,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return SizedBox.square(
+      dimension: largeIconSize,
+      child: icon,
+    );
+  }
+
+  Widget _buildPreview(BuildContext context) {
     final color = this.color ?? Theme.of(context).colorScheme.primary;
 
     Widget child;
@@ -43,6 +77,30 @@ class FilePreview extends StatelessWidget {
     return SizedBox.fromSize(
       size: size,
       child: child,
+    );
+  }
+
+  Widget _buildProgressIndicator(BuildContext context, FilesTask task) {
+    return StreamBuilder(
+      stream: task.progress,
+      builder: (context, progress) => progress.hasData && progress.data == 1.0
+          ? _buildPreview(context)
+          : Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(
+            switch (task) {
+              FilesUploadTask() => MdiIcons.upload,
+              FilesRefetchTask() => MdiIcons.refresh,
+              FilesDownloadTask() => MdiIcons.download,
+            },
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          CircularProgressIndicator(
+            value: progress.data,
+          ),
+        ],
+      ),
     );
   }
 }

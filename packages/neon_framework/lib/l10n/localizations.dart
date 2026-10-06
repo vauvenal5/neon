@@ -367,6 +367,12 @@ abstract class NeonLocalizations {
   /// **'Install NextPush'**
   String get nextPushSupportedInstall;
 
+  /// Number of items currently selected in an app.
+  String selectionCount(int count);
+
+  /// Tooltip for the actions menu shown while items are selected.
+  String get selectionActions;
+
   /// No description provided for @searchIn.
   ///
   /// In en, this message translates to:

@@ -1,3 +1,4 @@
+export 'package:neon_framework/src/widgets/app_bar_controller.dart';
 export 'package:neon_framework/src/widgets/autocomplete.dart';
 export 'package:neon_framework/src/widgets/custom_background.dart';
 export 'package:neon_framework/src/widgets/dialog.dart'
@@ -6,6 +7,7 @@ export 'package:neon_framework/src/widgets/error.dart';
 export 'package:neon_framework/src/widgets/image.dart' hide NeonImage;
 export 'package:neon_framework/src/widgets/linear_progress_indicator.dart';
 export 'package:neon_framework/src/widgets/list_view.dart';
+export 'package:neon_framework/src/widgets/multi_select.dart';
 export 'package:neon_framework/src/widgets/relative_time.dart';
 export 'package:neon_framework/src/widgets/server_icon.dart';
 export 'package:neon_framework/src/widgets/user_avatar.dart' hide NeonUserStatusIndicator;

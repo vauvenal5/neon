@@ -5,6 +5,7 @@ import 'package:files_app/src/blocs/files.dart';
 import 'package:files_app/src/models/file_details.dart';
 import 'package:files_app/src/pages/details.dart';
 import 'package:files_app/src/utils/dialog.dart';
+import 'package:files_app/src/widgets/selection.dart';
 import 'package:flutter/material.dart';
 import 'package:neon_framework/blocs.dart';
 import 'package:neon_framework/models.dart';
@@ -59,14 +60,7 @@ class FileActions extends StatelessWidget {
           bloc.rename(details.uri, result);
         }
       case FilesFileAction.move:
-        if (!context.mounted) {
-          return;
-        }
-        final result = await showChooseFolderDialog(context, details);
-
-        if (result != null) {
-          bloc.move(details.uri, result.join(webdav.PathUri.parse(details.name)));
-        }
+        await moveFileAction(context, details, bloc);
       case FilesFileAction.copy:
         if (!context.mounted) {
           return;

@@ -43,6 +43,11 @@
     }
   },
   "actionDeleteTitle": "Permanently delete?",
+  "selectionCount": "{count} selected",
+  "@selectionCount": {"placeholders": {"count": {"type": "int"}}},
+  "selectionActions": "Selected file actions",
+  "bulkDeleteConfirm": "Are you sure you want to delete these {count} items?",
+  "@bulkDeleteConfirm": {"placeholders": {"count": {"type": "int"}}},
   "filesChooseCreate": "Add to Nextcloud",
   "folderCreate": "Create folder",
   "folderName": "Folder name",

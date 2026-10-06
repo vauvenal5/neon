@@ -84,6 +84,24 @@ Future<webdav.PathUri?> showChooseFolderDialog(BuildContext context, FileDetails
   return result;
 }
 
+/// Displays a folder chooser for moving or copying several items from one directory.
+Future<webdav.PathUri?> showChooseFolderForSelectionDialog(
+  BuildContext context, {
+  required webdav.PathUri uri,
+  required Set<webdav.PathUri> hideUris,
+}) async {
+  final filesBloc = NeonProvider.of<FilesBloc>(context);
+
+  return showDialog<webdav.PathUri>(
+    context: context,
+    builder: (context) => FilesChooseFolderDialog(
+      bloc: filesBloc,
+      uri: uri,
+      hideUris: hideUris,
+    ),
+  );
+}
+
 /// Displays a [NeonConfirmationDialog] to confirm deleting a file or folder with the given [details].
 ///
 /// Returns a future whether the action has been accepted.
@@ -98,6 +116,18 @@ Future<bool> showDeleteConfirmationDialog(BuildContext context, FileDetails deta
               ? FilesLocalizations.of(context).folderDeleteConfirm(details.name)
               : FilesLocalizations.of(context).fileDeleteConfirm(details.name),
         ),
+      ),
+    ) ??
+    false;
+
+/// Confirms deleting a group of selected files and folders.
+Future<bool> showBulkDeleteConfirmationDialog(BuildContext context, int count) async =>
+    await showAdaptiveDialog<bool>(
+      context: context,
+      builder: (context) => NeonConfirmationDialog(
+        title: FilesLocalizations.of(context).actionDeleteTitle,
+        icon: const Icon(Icons.delete_outlined),
+        content: Text(FilesLocalizations.of(context).bulkDeleteConfirm(count)),
       ),
     ) ??
     false;

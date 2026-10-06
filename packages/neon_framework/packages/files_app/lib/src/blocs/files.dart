@@ -310,6 +310,8 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
         }
       });
     }
+    
+    await fetchFile(uri, etag);
 
     refetchTasks.add(FilesRefetchTask(uri: uri));
   }

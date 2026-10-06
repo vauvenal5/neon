@@ -32,15 +32,27 @@ class _CategoryViewState extends State<CategoryView> {
   late final FilesBrowserBloc bloc;
   late final StreamSubscription<Object> errorsSubscription;
   late final StickyHeaderController controller;
+  late final NeonAppBarController appBarController;
+  late final NeonMultiSelectController<FileDetails> selection;
 
   int axis = 1;
   double width = 1;
 
   @override
   void initState() {
+    appBarController = NeonProvider.of<NeonAppBarController>(context);
     filesBloc = NeonProvider.of<FilesBloc>(context);
     options = NeonProvider.of<FilesOptions>(context);
     blurBloc = NeonProvider.of<BlurBloc>(context);
+    selection = NeonMultiSelectController<FileDetails>(
+      keyOf: (details) => details.etag ?? details.uri.toString(),
+      actionsBuilder: (selectedItems) => buildFilesMultiSelectActions(
+        selectedItems: selectedItems,
+        filesBloc: filesBloc,
+        destinationUri: widget.uri,
+      ),
+    )..addListener(_onSelectionChanged);
+    appBarController.registerSelectionSession(ObjectKey(this), selection);
 
     controller = StickyHeaderController();
 
@@ -83,6 +95,10 @@ class _CategoryViewState extends State<CategoryView> {
 
   @override
   void dispose() {
+    appBarController.clearSelectionSession(ObjectKey(this));
+    selection
+      ..removeListener(_onSelectionChanged)
+      ..dispose();
     unawaited(errorsSubscription.cancel());
     bloc.dispose();
 
@@ -124,9 +140,9 @@ class _CategoryViewState extends State<CategoryView> {
 
   Widget _buildHeader(String key, BuildContext context) {
     return Container(
-      height: 30.0,
-      color: Theme.of(context).colorScheme.secondary,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      height: 30,
+      color: Theme.of(context).colorScheme.primary,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       alignment: Alignment.centerLeft,
       child: Text(
         key,
@@ -154,13 +170,34 @@ class _CategoryViewState extends State<CategoryView> {
               file: file,
             );
 
-            return GestureDetector(
+            final isSelected = selection.isSelected(details);
+
+            return InkWell(
               key: ValueKey(details.etag),
-              onTap: () => _onTap(file, details, sorted),
-              child: FilePreview(
-                bloc: filesBloc,
-                size: Size.square(width),
-                details: details,
+              onTap: selection.isNotEmpty ? () => selection.toggle(details) : () => _onTap(file, details, sorted),
+              onLongPress: () => selection.toggle(details),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  FilePreview(
+                    bloc: filesBloc,
+                    size: Size.square(width),
+                    details: details,
+                  ),
+                  if (selection.isNotEmpty)
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.25) : null,
+                      ),
+                      child: Align(
+                        alignment: Alignment.topRight,
+                        child: Checkbox(
+                            value: isSelected,
+                            shape: const CircleBorder(),
+                            onChanged: (_) => selection.toggle(details)),
+                      ),
+                    ),
+                ],
               ),
             );
           },
@@ -175,6 +212,12 @@ class _CategoryViewState extends State<CategoryView> {
     );
   }
 
+  void _onSelectionChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   Future<void> _onTap(webdav.WebDavFile file, FileDetails details, List<webdav.WebDavFile> sorted) async {
     // size warning handling needs to be made global
     final sizeWarning = NeonProvider.of<FilesOptions>(context).downloadSizeWarning.value;
@@ -186,15 +229,17 @@ class _CategoryViewState extends State<CategoryView> {
       }
     }
 
-    if (context.mounted) {
-      final capability = NeonProvider.of<AppsBloc>(context).handleAppCapability(
-        context,
-        ImageViewerCapability.fromFile(file: file, files: sorted),
-      );
+    if (!mounted) {
+      return;
+    }
 
-      if (capability != null) {
-        await capability;
-      }
+    final capability = NeonProvider.of<AppsBloc>(context).handleAppCapability(
+      context,
+      ImageViewerCapability.fromFile(file: file, files: sorted),
+    );
+
+    if (capability != null) {
+      await capability;
     }
   }
 }

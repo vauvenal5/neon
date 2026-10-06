@@ -63,6 +63,15 @@ class FilesLocalizationsEn extends FilesLocalizations {
   String get actionDeleteTitle => 'Permanently delete?';
 
   @override
+  String selectionCount(int count) => '$count selected';
+
+  @override
+  String get selectionActions => 'Selected file actions';
+
+  @override
+  String bulkDeleteConfirm(int count) => 'Are you sure you want to delete these $count items?';
+
+  @override
   String get filesChooseCreate => 'Add to Nextcloud';
 
   @override

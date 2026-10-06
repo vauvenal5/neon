@@ -125,11 +125,14 @@ class _HomePageState extends State<HomePage> {
           builder: (context, navigationMode, _) {
             final drawerAlwaysVisible = navigationMode == global_options.NavigationMode.drawerAlwaysVisible;
 
-            final body = Scaffold(
-              resizeToAvoidBottomInset: false,
-              drawer: showDrawer && !drawerAlwaysVisible ? const NeonDrawer() : null,
-              appBar: const NeonAppBar(),
-              body: appView,
+            // Share the active app's selection session with the global app bar.
+            final body = NeonAppBarProvider(
+              builder: (context, appBar) => Scaffold(
+                resizeToAvoidBottomInset: false,
+                drawer: showDrawer && !drawerAlwaysVisible ? const NeonDrawer() : null,
+                appBar: appBar,
+                body: appView,
+              ),
             );
 
             if (showDrawer && drawerAlwaysVisible) {

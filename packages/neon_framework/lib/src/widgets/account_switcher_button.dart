@@ -38,6 +38,10 @@ class AccountSwitcherButton extends StatelessWidget {
     );
 
     if (account != null) {
+      // Close account-scoped pages before their paths are resolved against the new account.
+      if (account.id != accountsBloc.activeAccount.valueOrNull?.id && context.mounted) {
+        Navigator.of(context).popUntil((route) => route.settings.name == 'home');
+      }
       accountsBloc.setActiveAccount(account);
     }
   }
