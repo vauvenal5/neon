@@ -11,7 +11,6 @@ import 'package:neon_framework/src/utils/dialog.dart';
 import 'package:neon_framework/src/utils/global_options.dart' as global_options;
 import 'package:neon_framework/src/utils/global_popups.dart';
 import 'package:neon_framework/src/utils/provider.dart';
-import 'package:neon_framework/src/widgets/app_bar.dart';
 import 'package:neon_framework/src/widgets/drawer.dart';
 import 'package:neon_framework/widgets.dart';
 import 'package:nextcloud/nextcloud.dart';
@@ -125,11 +124,13 @@ class _HomePageState extends State<HomePage> {
           builder: (context, navigationMode, _) {
             final drawerAlwaysVisible = navigationMode == global_options.NavigationMode.drawerAlwaysVisible;
 
-            final body = Scaffold(
-              resizeToAvoidBottomInset: false,
-              drawer: showDrawer && !drawerAlwaysVisible ? const NeonDrawer() : null,
-              appBar: const NeonAppBar(),
-              body: appView,
+            final body = NeonAppBarProvider(
+              builder: (context, appBar) => Scaffold(
+                resizeToAvoidBottomInset: false,
+                drawer: showDrawer && !drawerAlwaysVisible ? const NeonDrawer() : null,
+                appBar: appBar,
+                body: appView,
+              ),
             );
 
             if (showDrawer && drawerAlwaysVisible) {

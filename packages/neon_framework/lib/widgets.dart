@@ -1,3 +1,4 @@
+export 'package:neon_framework/src/widgets/app_bar.dart' hide NeonAppBar;
 export 'package:neon_framework/src/widgets/autocomplete.dart';
 export 'package:neon_framework/src/widgets/custom_background.dart';
 export 'package:neon_framework/src/widgets/dialog.dart'
