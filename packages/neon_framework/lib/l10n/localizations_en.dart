@@ -181,6 +181,12 @@ class NeonLocalizationsEn extends NeonLocalizations {
   String get nextPushSupportedInstall => 'Install NextPush';
 
   @override
+  String selectionCount(int count) => '$count selected';
+
+  @override
+  String get selectionActions => 'Selection actions';
+
+  @override
   String searchIn(String app) {
     return 'Search in $app';
   }
