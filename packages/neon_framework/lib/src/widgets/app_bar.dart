@@ -57,71 +57,73 @@ class _NeonAppBarState extends State<NeonAppBar> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: StreamBuilder(
-          stream: appsBloc.activeApp,
-          builder: (context, activeAppSnapshot) {
-            if (!activeAppSnapshot.hasData) {
-              return const Align(
-                alignment: Alignment.topRight,
-                child: AccountSwitcherButton(),
-              );
-            }
-            final activeApp = activeAppSnapshot.requireData;
+      child: Padding(padding: const EdgeInsets.all(6), child: _buildSearchBar(context)),
+    );
+  }
 
-            final localizations = NeonLocalizations.of(context);
-            final hintText = localizations.searchIn(activeApp.nameFromLocalization(localizations));
+  Widget _buildSearchBar(BuildContext context) {
+    return StreamBuilder(
+      stream: appsBloc.activeApp,
+      builder: (context, activeAppSnapshot) {
+        if (!activeAppSnapshot.hasData) {
+          return const Align(
+            alignment: Alignment.topRight,
+            child: AccountSwitcherButton(),
+          );
+        }
+        final activeApp = activeAppSnapshot.requireData;
 
-            return SearchAnchor(
-              isFullScreen: true,
-              viewHintText: hintText,
-              textInputAction: TextInputAction.search,
-              searchController: searchController,
-              builder: (context, controller) {
-                return ValueListenableBuilder(
-                  valueListenable: globalOptions.navigationMode,
-                  builder: (context, navigationMode, _) {
-                    final drawerAlwaysVisible = navigationMode == global_options.NavigationMode.drawerAlwaysVisible;
-                    return ResultBuilder.behaviorSubject(
-                      subject: appsBloc.appImplementations,
-                      builder: (context, appImplementations) {
-                        final showDrawer = appImplementations.hasData && appImplementations.requireData.length > 1;
-                        return SearchBar(
+        final localizations = NeonLocalizations.of(context);
+        final hintText = localizations.searchIn(activeApp.nameFromLocalization(localizations));
+
+        return ValueListenableBuilder(
+          valueListenable: globalOptions.navigationMode,
+          builder: (context, navigationMode, _) {
+            final drawerAlwaysVisible = navigationMode == global_options.NavigationMode.drawerAlwaysVisible;
+            return ResultBuilder.behaviorSubject(
+              subject: appsBloc.appImplementations,
+              builder: (context, appImplementations) {
+                final showDrawer = appImplementations.hasData && appImplementations.requireData.length > 1;
+                return Row(
+                  children: [
+                    if (showDrawer && !drawerAlwaysVisible) const DrawerButton(),
+                    Expanded(
+                      // Keep navigation controls outside the search pill as it flexes between them.
+                      child: SearchAnchor(
+                        isFullScreen: true,
+                        viewHintText: hintText,
+                        textInputAction: TextInputAction.search,
+                        searchController: searchController,
+                        builder: (context, controller) => SearchBar(
                           hintText: hintText,
                           padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)),
                           textInputAction: TextInputAction.search,
-                          leading: showDrawer && !drawerAlwaysVisible ? const DrawerButton() : null,
-                          trailing: const [
-                            AccountSwitcherButton(),
-                          ],
                           onTap: () {
                             controller.openView();
                           },
-                        );
-                      },
-                    );
-                  },
+                        ),
+                        viewBuilder: (_) => Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: NeonUnifiedSearchResults(
+                            onSelected: (entry) async {
+                              searchController.closeView('');
+                              await launchUrl(NeonProvider.of<Account>(context), entry.resourceUrl);
+                            },
+                          ),
+                        ),
+                        viewOnChanged: searchTermController.add,
+                        // The view is completely custom rendered, so we don't need the suggestions
+                        suggestionsBuilder: (context, controller) async => [],
+                      ),
+                    ),
+                    const AccountSwitcherButton(),
+                  ],
                 );
-              },
-              viewBuilder: (_) => Padding(
-                padding: const EdgeInsets.all(8),
-                child: NeonUnifiedSearchResults(
-                  onSelected: (entry) async {
-                    searchController.closeView('');
-                    await launchUrl(NeonProvider.of<Account>(context), entry.resourceUrl);
-                  },
-                ),
-              ),
-              viewOnChanged: searchTermController.add,
-              // The view is completely custom rendered, so we don't need the suggestions
-              suggestionsBuilder: (context, controller) async {
-                return [];
               },
             );
           },
-        ),
-      ),
+        );
+      },
     );
   }
 }
