@@ -50,8 +50,8 @@ class FilePreview extends StatelessWidget {
       );
     }
 
-    return SizedBox.square(
-      dimension: largeIconSize,
+    return SizedBox.fromSize(
+      size: size,
       child: icon,
     );
   }
@@ -74,10 +74,7 @@ class FilePreview extends StatelessWidget {
       );
     }
 
-    return SizedBox.fromSize(
-      size: size,
-      child: child,
-    );
+    return child;
   }
 
   Widget _buildProgressIndicator(BuildContext context, FilesTask task) {
