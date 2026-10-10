@@ -7,9 +7,9 @@ import 'package:files_app/src/models/file_details.dart';
 import 'package:files_app/src/options.dart';
 import 'package:files_app/src/sort/files.dart';
 import 'package:files_app/src/utils/task.dart';
+import 'package:files_app/src/widgets/actions.dart';
 import 'package:files_app/src/widgets/file_list_tile.dart';
 import 'package:files_app/src/widgets/navigator.dart';
-import 'package:files_app/src/widgets/selection.dart';
 import 'package:flutter/material.dart';
 import 'package:neon_framework/blocs.dart';
 import 'package:neon_framework/models.dart';
@@ -51,10 +51,10 @@ class _FilesBrowserViewState extends State<FilesBrowserView> {
       appBarController = NeonProvider.of<NeonAppBarController>(context);
       selection = NeonMultiSelectController<FileDetails>(
         keyOf: (details) => details.uri,
-        actionsBuilder: (selectedItems) => buildFilesMultiSelectActions(
+        actionsBuilder: (selectedItems) => buildFilesActions(
           selectedItems: selectedItems,
           filesBloc: widget.filesBloc,
-          destinationUri: widget.uri,
+          parentUri: widget.uri,
         ),
       )..addListener(_onSelectionChanged);
       appBarController?.registerSelectionSession(ObjectKey(this), selection!);

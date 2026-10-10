@@ -10,7 +10,6 @@ export 'package:files_app/src/options.dart';
 export 'package:files_app/src/sort/files.dart';
 export 'package:files_app/src/utils/dialog.dart' show showDownloadConfirmationDialog;
 export 'package:files_app/src/utils/task.dart' show FilesDownloadTask, FilesRefetchTask;
+// Expose shared file actions for apps that use the framework's typed selection controller.
 export 'package:files_app/src/widgets/actions.dart';
 export 'package:files_app/src/widgets/file_preview.dart';
-// Expose shared file actions for apps that use the framework's typed selection controller.
-export 'package:files_app/src/widgets/selection.dart';

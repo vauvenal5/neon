@@ -12,6 +12,7 @@ import 'package:neon_framework/src/utils/provider.dart';
 import 'package:neon_framework/src/widgets/account_switcher_button.dart';
 import 'package:neon_framework/src/widgets/app_bar_controller.dart';
 import 'package:neon_framework/src/widgets/multi_select.dart';
+import 'package:neon_framework/src/widgets/popup_menu_button.dart';
 import 'package:neon_framework/src/widgets/unified_search_results.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -82,7 +83,7 @@ class _NeonAppBarState extends State<NeonAppBar> {
                 onPressed: selection.clear,
               ),
               title: Text(NeonLocalizations.of(context).selectionCount(selection.selectedCount)),
-              actions: selection.actions.isNotEmpty ? [_buildSelectionPopupMenu(context, selection)] : null,
+              actions: [_buildSelectionPopupMenu(context, selection)],
             ),
           );
         }
@@ -99,31 +100,14 @@ class _NeonAppBarState extends State<NeonAppBar> {
   }
 
   Widget _buildSelectionPopupMenu(BuildContext context, NeonMultiSelectSession selection) {
-    return PopupMenuButton<NeonMultiSelectAction>(
-      tooltip: NeonLocalizations.of(context).selectionActions,
+    return NeonPopupMenuButton(
+      actions: selection.actions,
       onSelected: (action) async {
         final result = await action.onSelected(context);
         if (result == NeonMultiSelectActionResult.clearSelection && identical(appBarController.selection, selection)) {
           selection.clear();
         }
       },
-      itemBuilder: (context) => selection.actions
-          .map(
-            (action) => PopupMenuItem(
-              value: action,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (action.icon != null) ...[
-                    Icon(action.icon),
-                    const SizedBox(width: 8),
-                  ],
-                  Text(action.label(context)),
-                ],
-              ),
-            ),
-          )
-          .toList(),
     );
   }
 

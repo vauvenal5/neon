@@ -46,10 +46,10 @@ class _CategoryViewState extends State<CategoryView> {
     blurBloc = NeonProvider.of<BlurBloc>(context);
     selection = NeonMultiSelectController<FileDetails>(
       keyOf: (details) => details.etag ?? details.uri.toString(),
-      actionsBuilder: (selectedItems) => buildFilesMultiSelectActions(
+      actionsBuilder: (selectedItems) => buildFilesActions(
         selectedItems: selectedItems,
         filesBloc: filesBloc,
-        destinationUri: widget.uri,
+        parentUri: widget.uri,
       ),
     )..addListener(_onSelectionChanged);
     appBarController.registerSelectionSession(ObjectKey(this), selection);
