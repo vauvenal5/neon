@@ -24,7 +24,6 @@ class FilesBrowserView extends StatefulWidget {
     required this.uri,
     required this.mode,
     required this.setPath,
-    this.hideUri,
     this.hideUris = const {},
   }) : super(key: Key(uri.toString()));
 
@@ -32,7 +31,6 @@ class FilesBrowserView extends StatefulWidget {
   final webdav.PathUri uri;
   final FilesBrowserMode mode;
   final void Function(webdav.PathUri uri) setPath;
-  final webdav.PathUri? hideUri;
   final Set<webdav.PathUri> hideUris;
 
   @override
@@ -71,7 +69,6 @@ class _FilesBrowserViewState extends State<FilesBrowserView> {
       account: NeonProvider.of<Account>(context),
       uri: widget.uri,
       mode: widget.mode,
-      hideUri: widget.hideUri,
       hideUris: widget.hideUris,
       mimeFilter: options.appConfigMimeFilter,
     );

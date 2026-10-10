@@ -25,15 +25,11 @@ class FileActions extends StatelessWidget {
     final bloc = NeonProvider.of<FilesBloc>(context);
     switch (action) {
       case FilesFileAction.share:
-        bloc.shareFileNative(details.uri, details.etag!, details.mimeType);
+        bloc.shareFilesNative([details]);
       case FilesFileAction.attach:
-        bloc.shareFileNative(details.uri, details.etag!, details.mimeType, attach: true);
+        bloc.attachFileNative(details.uri, details.etag!);
       case FilesFileAction.toggleFavorite:
-        if (details.isFavorite ?? false) {
-          bloc.removeFavorite(details.uri);
-        } else {
-          bloc.addFavorite(details.uri);
-        }
+        await toggleFavoriteFileAction(context, details, bloc);
       case FilesFileAction.details:
         await Navigator.of(context).push(
           MaterialPageRoute<void>(
@@ -62,22 +58,9 @@ class FileActions extends StatelessWidget {
       case FilesFileAction.move:
         await moveFileAction(context, details, bloc);
       case FilesFileAction.copy:
-        if (!context.mounted) {
-          return;
-        }
-
-        final result = await showChooseFolderDialog(context, details);
-        if (result != null) {
-          bloc.copy(details.uri, result.join(webdav.PathUri.parse(details.name)));
-        }
+        await copyFileAction(context, details, bloc);
       case FilesFileAction.delete:
-        if (!context.mounted) {
-          return;
-        }
-        final decision = await showDeleteConfirmationDialog(context, details);
-        if (decision) {
-          bloc.delete(details.uri);
-        }
+        await deleteFileAction(context, details, bloc);
       case FilesFileAction.download:
         await bloc.refetchFile(details.uri, details.etag!);
     }

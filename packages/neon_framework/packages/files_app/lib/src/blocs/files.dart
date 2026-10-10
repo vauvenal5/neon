@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:built_collection/built_collection.dart';
 import 'package:files_app/l10n/localizations.dart';
+import 'package:files_app/src/models/file_details.dart';
 import 'package:files_app/src/options.dart';
 import 'package:files_app/src/utils/task.dart';
 import 'package:flutter/foundation.dart';
@@ -34,7 +35,9 @@ sealed class FilesBloc implements InteractiveBloc {
 
   void openFile(webdav.PathUri uri, String etag, String? mimeType);
 
-  void shareFileNative(webdav.PathUri uri, String etag, String? mimeType, {bool attach});
+  void shareFilesNative(List<FileDetails> files);
+
+  void attachFileNative(webdav.PathUri uri, String etag);
 
   void delete(webdav.PathUri uri);
 
@@ -229,14 +232,35 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
   }
 
   @override
-  Future<void> shareFileNative(webdav.PathUri uri, String etag, String? mimeType, {bool attach = false}) async {
+  Future<void> shareFilesNative(List<FileDetails> files) async {
+    await wrapAction(
+      () async {
+        if (NeonPlatform.instance.canUsePaths) {
+          await _useCachedFiles(
+            files,
+            (localFiles) => SharePlus.instance.share(
+              ShareParams(files: localFiles.map((file) => XFile(file.path)).toList()),
+            ),
+          );
+        } else {
+          throw UnimplementedError('Sharing is not supported on web');
+        }
+      },
+      disableTimeout: true,
+      // no need to refresh the view after a share operation
+      refresh: Future.value,
+    );
+  }
+
+  @override
+  Future<void> attachFileNative(webdav.PathUri uri, String etag) async {
     await wrapAction(
       () async {
         if (NeonPlatform.instance.canUsePaths) {
           await _useCachedFile(
             uri,
             etag,
-            (file) => SharePlus.instance.share(ShareParams(files: [XFile(file.path)], attach: attach)),
+            (file) => SharePlus.instance.share(ShareParams(files: [XFile(file.path)], attach: true)),
           );
         } else {
           throw UnimplementedError('Sharing is not supported on web');
@@ -310,7 +334,7 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
         }
       });
     }
-    
+
     await fetchFile(uri, etag);
 
     refetchTasks.add(FilesRefetchTask(uri: uri));
@@ -324,21 +348,34 @@ class _FilesBloc extends InteractiveBloc implements FilesBloc {
     return downloadMemory(uri);
   }
 
-  // Keep file consumption inside the callback so clearing cannot delete a returned File before the caller uses it.
-  Future<T> _useCachedFile<T>(webdav.PathUri uri, String etag, Future<T> Function(File file) action) =>
+  Future<T> _useCachedFiles<T>(List<FileDetails> files, Future<T> Function(List<File> files) action) =>
       _useCache((directory) async {
-        final file = _getLocalCacheFile(directory, uri, etag);
+        final localFiles = <File>[];
 
-        if (!file.existsSync()) {
-          log.fine('Downloading $uri since it does not exist');
-          if (!file.parent.existsSync()) {
-            await file.parent.create(recursive: true);
-          }
-          await downloadIO(uri, file);
+        for (final file in files) {
+          localFiles.add(await _fetchCachedFile(directory, file.uri, file.etag!));
         }
 
-        return action(file);
+        return action(localFiles);
       });
+
+  // Keep file consumption inside the callback so clearing cannot delete a returned File before the caller uses it.
+  Future<T> _useCachedFile<T>(webdav.PathUri uri, String etag, Future<T> Function(File file) action) =>
+      _useCache((directory) async => action(await _fetchCachedFile(directory, uri, etag)));
+
+  Future<File> _fetchCachedFile(Directory directory, webdav.PathUri uri, String etag) async {
+    final file = _getLocalCacheFile(directory, uri, etag);
+
+    if (!file.existsSync()) {
+      log.fine('Downloading $uri since it does not exist');
+      if (!file.parent.existsSync()) {
+        await file.parent.create(recursive: true);
+      }
+      await downloadIO(uri, file);
+    }
+
+    return file;
+  }
 
   Future<T> _useCache<T>(Future<T> Function(Directory directory) action) {
     final cacheStorage = this.cacheStorage;
