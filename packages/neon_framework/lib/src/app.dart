@@ -59,6 +59,8 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
   late final BuiltSet<AppImplementation> _appImplementations;
   late final GlobalOptions _globalOptions;
   late final AccountsBloc _accountsBloc;
+  late final StreamSubscription<BuiltList<Account>> _accountsSubscription;
+  var _hasLoadedAccountList = false;
   late final _routerDelegate = buildAppRouter(
     navigatorKey: _navigatorKey,
     accountRepository: context.read<AccountRepository>(),
@@ -71,6 +73,7 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
     _appImplementations = NeonProvider.of<BuiltSet<AppImplementation>>(context);
     _globalOptions = NeonProvider.of<GlobalOptions>(context);
     _accountsBloc = NeonProvider.of<AccountsBloc>(context);
+    _accountsSubscription = _accountsBloc.accounts.listen((_) => _updateGlobalAccountOptions());
 
     WidgetsBinding.instance.addObserver(this);
     if (NeonPlatform.instance.canUseWindowManager) {
@@ -167,6 +170,15 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
     });
   }
 
+  void _updateGlobalAccountOptions() {
+    final accounts = _accountsBloc.accounts.value;
+    // Ignore the bloc's initial empty placeholder so it cannot clear a saved initial account.
+    if (accounts.isNotEmpty || _hasLoadedAccountList) {
+      _globalOptions.updateAccounts(accounts);
+      _hasLoadedAccountList = true;
+    }
+  }
+
   @override
   Future<void> onWindowClose() async {
     if (_globalOptions.startupMinimizeInsteadOfExit.value) {
@@ -194,6 +206,7 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
 
   @override
   void dispose() {
+    unawaited(_accountsSubscription.cancel());
     WidgetsBinding.instance.removeObserver(this);
     if (NeonPlatform.instance.canUseWindowManager) {
       windowManager.removeListener(this);

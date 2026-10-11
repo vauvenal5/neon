@@ -24,17 +24,11 @@ class GlobalOptions extends OptionsCollection {
     this._distributors,
   ) : super(NeonStorage().settingsStore(StorageKeys.global)) {
     rememberLastUsedAccount.addListener(_rememberLastUsedAccountListener);
+    _rememberLastUsedAccountListener();
   }
 
   void _rememberLastUsedAccountListener() {
     initialAccount.enabled = !rememberLastUsedAccount.value;
-    if (rememberLastUsedAccount.value) {
-      initialAccount.reset();
-    } else {
-      // Only override the initial account if there already has been a value,
-      // which means it's not the initial emit from rememberLastUsedAccount
-      initialAccount.value = initialAccount.values.keys.first;
-    }
   }
 
   final PackageInfo _packageInfo;
