@@ -16,7 +16,10 @@ import 'package:nextcloud/webdav.dart' as webdav;
 class FilesMainPage extends StatefulWidget {
   const FilesMainPage({
     super.key,
+    this.mimeFilter = const MimeFilter.files(),
   });
+
+  final MimeFilter mimeFilter;
 
   @override
   State<FilesMainPage> createState() => _FilesMainPageState();
@@ -65,6 +68,7 @@ class _FilesMainPageState extends State<FilesMainPage> {
           filesBloc: bloc,
           uri: uri,
           mode: FilesBrowserMode.browser,
+          mimeFilter: widget.mimeFilter,
           setPath: (uri) {
             setState(() {
               this.uri = uri;
