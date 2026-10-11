@@ -1,3 +1,4 @@
+import 'package:files_app/src/widgets/app_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:neon_framework/utils.dart';
 import 'package:photos_app/src/blocs/bloc.dart';
@@ -27,6 +28,8 @@ class _PhotosMainPageState extends State<PhotosMainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Share the same app switcher with Files.
+      bottomNavigationBar: const FilesPhotosNavigationBar(selectedApp: FilesPhotosApp.photos),
       body: ValueListenableBuilder(
         valueListenable: accountOptions.mainRecursionModeOption,
         builder: (context, mode, child) => ValueListenableBuilder(

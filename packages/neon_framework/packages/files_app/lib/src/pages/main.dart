@@ -4,6 +4,7 @@ import 'package:files_app/l10n/localizations.dart';
 import 'package:files_app/src/blocs/browser.dart';
 import 'package:files_app/src/blocs/files.dart';
 import 'package:files_app/src/utils/dialog.dart';
+import 'package:files_app/src/widgets/app_navigation_bar.dart';
 import 'package:files_app/src/widgets/browser_view.dart';
 import 'package:flutter/material.dart';
 import 'package:neon_framework/blocs.dart';
@@ -61,6 +62,8 @@ class _FilesMainPageState extends State<FilesMainPage> {
         return false;
       },
       child: Scaffold(
+        // Share the same app switcher with Photos.
+        bottomNavigationBar: const FilesPhotosNavigationBar(selectedApp: FilesPhotosApp.files),
         body: FilesBrowserView(
           filesBloc: bloc,
           uri: uri,
