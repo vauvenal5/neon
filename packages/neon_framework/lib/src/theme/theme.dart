@@ -112,6 +112,11 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: colorScheme.surface,
       cardColor: colorScheme.surface,
+      // Keep list tile trailing actions close to the edge across the app.
+      // see https://github.com/flutter/flutter/issues/141919
+      listTileTheme: const ListTileThemeData(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+      ),
       // For LicensePage
       snackBarTheme: _snackBarTheme,
       dividerTheme: _dividerTheme,
