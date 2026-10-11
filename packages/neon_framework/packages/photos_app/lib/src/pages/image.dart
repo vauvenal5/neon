@@ -41,8 +41,10 @@ class _ImagePageState extends State<ImagePage> {
   void initState() {
     super.initState();
 
-    _files = widget.sorted.where((file) => file.mimeType?.startsWith(RegExp('image/.*')) ?? false).toList();
-    _imageKey = ImageKey(index: _files.indexOf(widget.file));
+    _files = widget.sorted
+        .where((file) => file.etag != null && (file.mimeType?.startsWith(RegExp('image/.*')) ?? false))
+        .toList();
+    _imageKey = ImageKey(etag: widget.file.etag!, index: _files.indexOf(widget.file));
 
     pageController = PageController(initialPage: _imageKey.index);
     _subscription = NeonProvider.of<FilesBloc>(context)
@@ -69,7 +71,7 @@ class _ImagePageState extends State<ImagePage> {
 
   void _onPageChanged(int index) {
     setState(() {
-      _imageKey = ImageKey(index: index);
+      _imageKey = ImageKey(etag: _files[index].etag!, index: index);
     });
   }
 
@@ -110,9 +112,12 @@ class _ImagePageState extends State<ImagePage> {
                   pageController: pageController,
                   onPageChanged: _onPageChanged,
                   builder: (context, index) {
+                    final file = _files[index];
                     // in case it is a new page we need to create a new key, otherwise we need to use the existing one
-                    final fileKey = _imageKey.index == index ? _imageKey : ImageKey(index: index);
-                    final file = _files[fileKey.index];
+                    final fileKey = _imageKey.etag == file.etag! && _imageKey.index == index
+                        ? _imageKey
+                        : ImageKey(etag: file.etag!, index: index);
+
                     log.fine('Drawing ${file.path}');
 
                     return PhotoViewGalleryPageOptions(
