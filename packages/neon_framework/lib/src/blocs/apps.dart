@@ -80,7 +80,8 @@ class _AppsBloc extends InteractiveBloc implements AppsBloc {
     });
 
     appImplementations.listen((result) {
-      if (result.hasData) {
+      // Only validate the saved initial app against the complete, settled app list.
+      if (result.hasSuccessfulData) {
         accountOptions.updateAppImplementations(result.requireData);
       }
     });
