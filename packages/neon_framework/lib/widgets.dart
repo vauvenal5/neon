@@ -1,5 +1,6 @@
 export 'package:neon_framework/src/widgets/app_bar_controller.dart';
 export 'package:neon_framework/src/widgets/autocomplete.dart';
+export 'package:neon_framework/src/widgets/circular_progress_indicator.dart';
 export 'package:neon_framework/src/widgets/custom_background.dart';
 export 'package:neon_framework/src/widgets/dialog.dart'
     hide AccountDeletion, NeonAccountDeletionDialog, NeonAccountSelectionDialog, NeonUnifiedPushDialog;
