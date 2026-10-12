@@ -70,23 +70,23 @@ class _NewsMainPageState extends State<NewsMainPage> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: index,
-        onTap: (index) {
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: index,
+        onDestinationSelected: (index) {
           setState(() {
             this.index = index;
           });
         },
-        items: [
-          BottomNavigationBarItem(
+        destinations: [
+          NavigationDestination(
             icon: Icon(AdaptiveIcons.newspaper),
             label: NewsLocalizations.of(context).articles,
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(AdaptiveIcons.folder),
             label: NewsLocalizations.of(context).folders,
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: const Icon(Icons.rss_feed),
             label: NewsLocalizations.of(context).feeds,
           ),

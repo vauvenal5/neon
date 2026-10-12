@@ -28,9 +28,9 @@ class PhotosNavigationBar extends StatelessWidget {
       PhotosSelectedView.browse => 1,
     };
 
-    return BottomNavigationBar(
-      currentIndex: currentIndex,
-      onTap: (index) {
+    return NavigationBar(
+      selectedIndex: currentIndex,
+      onDestinationSelected: (index) {
         if (index != currentIndex) {
           onSelected(switch (index) {
             0 => PhotosSelectedView.category,
@@ -39,9 +39,9 @@ class PhotosNavigationBar extends StatelessWidget {
           });
         }
       },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.photo), label: 'Timeline'),
-        BottomNavigationBarItem(icon: Icon(Icons.folder), label: 'Browse'),
+      destinations: const [
+        NavigationDestination(icon: Icon(Icons.photo), label: 'Photos'),
+        NavigationDestination(icon: Icon(Icons.folder), label: 'Browse'),
       ],
     );
   }
