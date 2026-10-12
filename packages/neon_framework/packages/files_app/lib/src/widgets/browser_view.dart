@@ -165,8 +165,23 @@ class _FilesBrowserViewState extends State<FilesBrowserView> {
   }
 
   Future<bool> handleFileInNeon(List<webdav.WebDavFile> sorted, webdav.WebDavFile file) async {
-    final capability = NeonProvider.of<AppsBloc>(context)
-        .handleAppCapability(context, ImageViewerCapability.fromFile(file: file, files: sorted));
+    final capability = NeonProvider.of<AppsBloc>(context).handleAppCapability(
+      context,
+      ImageViewerCapability.fromFile(
+        file: file,
+        files: sorted,
+        // Keep the image viewer in sync with the current browser query.
+        filesStream: bloc.files,
+        sortFiles: (files) {
+          // Preserve the active file-browser sort policy in the refreshed image list.
+          filesSortBox.sortList(
+            files,
+            (property: options.filesSortPropertyOption.value, order: options.filesSortBoxOrderOption.value),
+          );
+          return files;
+        },
+      ),
+    );
     // If capability is null, either the file is not an image, or ther is no handler for the capability.
     // In both cases we should return false to allow the default behavior of opening the file in Neon.
     if (capability != null) {

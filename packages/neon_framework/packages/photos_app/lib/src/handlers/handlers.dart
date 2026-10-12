@@ -23,8 +23,10 @@ class ImageHandler extends AppCapabilityHandler {
   MaterialPageRoute<void> _pageRoute(BuildContext context, ImageViewerCapability mime) {
     return MaterialPageRoute<void>(
       builder: (context) => ImagePage(
-        sorted: mime.files ?? [mime.file],
+        initialFiles: mime.files ?? [mime.file],
         file: mime.file,
+        sortFiles: mime.sortFiles,
+        filesStream: mime.filesStream,
       ),
     );
   }

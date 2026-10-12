@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:built_collection/built_collection.dart';
 import 'package:flutter/material.dart';
+import 'package:neon_framework/src/bloc/result.dart';
 import 'package:neon_framework/src/models/app_implementation.dart';
 import 'package:nextcloud/webdav.dart' as webdav;
 
@@ -6,11 +10,14 @@ import 'package:nextcloud/webdav.dart' as webdav;
 /// Capabilities do also carry information required for handling a specific action, as well as an optional result in case the capability is a [ResultCapability].
 abstract class AppCapability {}
 
+/// Sorts the files supplied to an image viewer while retaining the caller's ordering policy.
+typedef ImageViewerFileSorter = List<webdav.WebDavFile> Function(List<webdav.WebDavFile> files);
+
 /// Certain capabilities can produce a result, for example the [DirectorySelectionCapability] allows apps to return a selected directory back to Neon or other apps.
 abstract class ResultCapability<T> extends AppCapability {
   /// The result of handling this capability. This can be set by the app providing the handler for this capability to return a result back to the caller.
-  /// 
-  /// There is no other way to provide a result to the caller. 
+  ///
+  /// There is no other way to provide a result to the caller.
   /// A well behaved handler which produces a result should set this before returning the capability in the [AppCapabilityHandler.handle] method.
   /// Awaiting the capability should always lead to the result being available.
   T? result;
@@ -22,12 +29,25 @@ class ImageViewerCapability extends AppCapability {
   ImageViewerCapability._({
     required this.file,
     this.files,
+    this.sortFiles,
+    this.filesStream,
   });
-  
+
   /// Creates a new [ImageViewerCapability] if the given file is an image that can be handled by this capability, otherwise returns null.
-  static ImageViewerCapability? fromFile({required webdav.WebDavFile file, List<webdav.WebDavFile>? files}) {
-    if(isImage(file)) {
-      return ImageViewerCapability._(file: file, files: files);
+  static ImageViewerCapability? fromFile({
+    required webdav.WebDavFile file,
+    Stream<Result<BuiltList<webdav.WebDavFile>>>? filesStream,
+    List<webdav.WebDavFile>? files,
+    ImageViewerFileSorter? sortFiles,
+  }) {
+    if (isImage(file)) {
+      // Carry the original query so a delegated viewer can refresh the same result set.
+      return ImageViewerCapability._(
+        file: file,
+        files: files,
+        sortFiles: sortFiles,
+        filesStream: filesStream,
+      );
     }
     return null;
   }
@@ -43,6 +63,12 @@ class ImageViewerCapability extends AppCapability {
 
   /// An optional list of files representing the context of the file. This allowes us to open a carusel view without the need to reload the files list.
   final List<webdav.WebDavFile>? files;
+
+  /// Optional caller-defined sort policy to apply after refreshing the file list.
+  final ImageViewerFileSorter? sortFiles;
+
+  /// Optional live file listing. The caller owns the stream and keeps it alive while the viewer is open.
+  final Stream<Result<BuiltList<webdav.WebDavFile>>>? filesStream;
 }
 
 /// Apps can provide a handler for this capability to allow Neon to delegate directory selection to the app, for example to allow users to select a directory in a file picker provided by the app instead of a system file picker.
