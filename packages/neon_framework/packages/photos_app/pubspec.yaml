@@ -8,6 +8,7 @@ environment:
   flutter: ^3.27.0
 
 dependencies:
+  built_collection: ^5.0.0
   files_app:
     path: ../files_app
   flutter:

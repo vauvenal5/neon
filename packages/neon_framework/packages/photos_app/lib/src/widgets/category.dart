@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:neon_framework/blocs.dart';
 import 'package:neon_framework/models.dart';
-import 'package:neon_framework/sort_box.dart';
 import 'package:neon_framework/utils.dart';
 import 'package:neon_framework/widgets.dart';
 import 'package:nextcloud/webdav.dart' as webdav;
+import 'package:photos_app/src/models/timeline.dart';
 
 class CategoryView extends StatefulWidget {
   CategoryView({
@@ -110,22 +110,12 @@ class _CategoryViewState extends State<CategoryView> {
     return ResultBuilder.behaviorSubject(
       subject: bloc.files,
       builder: (context, filesSnapshot) {
-        final sorted = filesSnapshot.data?.toList() ?? [];
-        const box = (property: FilesSortProperty.modifiedDate, order: SortBoxOrder.descending);
-        filesSortBox.sortList(sorted, box);
+        // Both the grid and gallery use the same filtered, sorted timeline.
+        final timeline = PhotoTimeline.fromFiles(filesSnapshot.data ?? []);
 
-        final categories = <String, List<webdav.WebDavFile>>{};
-
-        for (final file in sorted) {
-          final key = '${file.lastModified!.year}-${file.lastModified!.month.toString().padLeft(2, '0')}';
-          if (categories[key] == null) {
-            categories[key] = [];
-          }
-          categories[key]!.add(file);
-        }
-
-        final List<Widget> slivers =
-            categories.keys.map((key) => _buildCategory(key, categories[key]!, sorted, context)).toList();
+        final List<Widget> slivers = timeline.months.keys
+            .map((key) => _buildCategory(key, timeline.months[key]!, timeline.images, context))
+            .toList();
 
         return NeonListView.custom(
           scrollKey: 'category-${widget.uri.path}',
@@ -241,7 +231,13 @@ class _CategoryViewState extends State<CategoryView> {
 
     final capability = NeonProvider.of<AppsBloc>(context).handleAppCapability(
       context,
-      ImageViewerCapability.fromFile(file: file, files: sorted),
+      ImageViewerCapability.fromFile(
+        file: file,
+        files: sorted,
+        sortFiles: (files) => PhotoTimeline.fromFiles(files).images,
+        // Keep the viewer synchronized with this category's active query.
+        filesStream: bloc.files,
+      ),
     );
 
     if (capability != null) {
