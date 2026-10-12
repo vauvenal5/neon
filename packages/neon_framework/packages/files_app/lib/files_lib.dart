@@ -12,4 +12,5 @@ export 'package:files_app/src/sort/files.dart';
 export 'package:files_app/src/utils/dialog.dart' show showDownloadConfirmationDialog;
 export 'package:files_app/src/utils/task.dart' show FilesDownloadTask, FilesRefetchTask;
 export 'package:files_app/src/widgets/actions.dart';
+export 'package:files_app/src/widgets/favorite_icon_button.dart';
 export 'package:files_app/src/widgets/file_preview.dart';

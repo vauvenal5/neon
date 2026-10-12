@@ -5,6 +5,7 @@ import 'package:files_app/src/options.dart';
 import 'package:files_app/src/utils/dialog.dart';
 import 'package:files_app/src/utils/task.dart';
 import 'package:files_app/src/widgets/actions.dart';
+import 'package:files_app/src/widgets/favorite_icon_button.dart';
 import 'package:files_app/src/widgets/file_preview.dart';
 import 'package:filesize/filesize.dart';
 import 'package:flutter/material.dart';
@@ -94,17 +95,32 @@ class FileListTile extends StatelessWidget {
         details: details,
         bloc: bloc,
       ),
-      trailing: selectionMode
-          ? Checkbox(value: isSelected, shape: const CircleBorder(), onChanged: onSelect == null ? null : (_) => onSelect!())
-          : StreamBuilder(
-              stream: bloc.downloadTasks.where((task) => task != null && task.uri == details.uri),
-              initialData: bloc.getTask(details.uri),
-              builder: _buildTrailing,
-            ),
+      trailing: _buildTrailing(context),
     );
   }
 
-  Widget _buildTrailing(BuildContext context, AsyncSnapshot<FilesTask?> task) {
+  Widget _buildTrailing(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FavoriteIconButton(bloc: bloc, details: details),
+        if (selectionMode)
+          Checkbox(
+            value: isSelected,
+            shape: const CircleBorder(),
+            onChanged: onSelect == null ? null : (_) => onSelect!(),
+          )
+        else
+          StreamBuilder(
+            stream: bloc.downloadTasks.where((task) => task != null && task.uri == details.uri),
+            initialData: bloc.getTask(details.uri),
+            builder: _buildFileActions,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFileActions(BuildContext context, AsyncSnapshot<FilesTask?> task) {
     const empty = SizedBox.square(dimension: largeIconSize);
 
     if (FilesBrowserMode.browser == browserBloc.mode) {

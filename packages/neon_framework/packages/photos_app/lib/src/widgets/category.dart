@@ -157,6 +157,8 @@ class _CategoryViewState extends State<CategoryView> {
     List<webdav.WebDavFile> sorted,
     BuildContext context,
   ) {
+    final theme = Theme.of(context);
+
     return SliverStickyHeader(
       key: ValueKey(key),
       header: _buildHeader(key, context),
@@ -184,10 +186,14 @@ class _CategoryViewState extends State<CategoryView> {
                     size: Size.square(width),
                     details: details,
                   ),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: FavoriteIconButton(bloc: filesBloc, details: details),
+                  ),
                   if (selection.isNotEmpty)
                     DecoratedBox(
                       decoration: BoxDecoration(
-                        color: isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.25) : null,
+                        color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.25) : null,
                       ),
                       child: Align(
                         alignment: Alignment.topRight,
