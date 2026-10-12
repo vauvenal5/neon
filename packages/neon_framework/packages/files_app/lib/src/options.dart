@@ -6,7 +6,7 @@ import 'package:neon_framework/sort_box.dart';
 import 'package:neon_framework/storage.dart';
 
 class FilesOptions extends AppImplementationOptions {
-  FilesOptions(super.storage, {required this.appConfigMimeFilter}) {
+  FilesOptions(super.storage) {
     super.categories = [
       generalCategory,
     ];
@@ -20,8 +20,6 @@ class FilesOptions extends AppImplementationOptions {
       downloadSizeWarning,
     ];
   }
-
-  final MimeFilter appConfigMimeFilter;
 
   final generalCategory = OptionsCategory(
     name: (context) => FilesLocalizations.of(context).general,

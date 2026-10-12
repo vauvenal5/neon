@@ -7,6 +7,7 @@ export 'package:files_app/src/blocs/browser.dart';
 export 'package:files_app/src/blocs/files.dart';
 export 'package:files_app/src/models/file_details.dart';
 export 'package:files_app/src/options.dart';
+export 'package:files_app/src/pages/main.dart';
 export 'package:files_app/src/sort/files.dart';
 export 'package:files_app/src/utils/dialog.dart' show showDownloadConfirmationDialog;
 export 'package:files_app/src/utils/task.dart' show FilesDownloadTask, FilesRefetchTask;
