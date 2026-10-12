@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:logging/logging.dart';
 import 'package:neon_framework/utils.dart';
+import 'package:neon_framework/widgets.dart';
 import 'package:nextcloud/webdav.dart' as webdav;
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -134,8 +135,9 @@ class _ImagePageState extends State<ImagePage> {
                           imageFit: BoxFit.contain,
                         ),
                       Center(
-                        child: CircularProgressIndicator(
-                          value: event?.cumulativeBytesLoaded != null
+                        child: NeonCircularProgressIndicator(
+                          iconData: Icons.download,
+                          progress: event?.cumulativeBytesLoaded != null
                               ? event!.cumulativeBytesLoaded.toDouble() / event.expectedTotalBytes!
                               : null,
                         ),

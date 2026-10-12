@@ -2,7 +2,6 @@ import 'package:files_app/src/blocs/files.dart';
 import 'package:files_app/src/models/file_details.dart';
 import 'package:files_app/src/utils/task.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:neon_framework/models.dart';
 import 'package:neon_framework/theme.dart';
 import 'package:neon_framework/utils.dart';
@@ -82,22 +81,14 @@ class FilePreview extends StatelessWidget {
       stream: task.progress,
       builder: (context, progress) => progress.hasData && progress.data == 1.0
           ? _buildPreview(context)
-          : Stack(
-        alignment: Alignment.center,
-        children: [
-          Icon(
-            switch (task) {
-              FilesUploadTask() => MdiIcons.upload,
-              FilesRefetchTask() => MdiIcons.refresh,
-              FilesDownloadTask() => MdiIcons.download,
-            },
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          CircularProgressIndicator(
-            value: progress.data,
-          ),
-        ],
-      ),
+          : NeonCircularProgressIndicator(
+              iconData: switch (task) {
+                FilesUploadTask() => Icons.upload,
+                FilesRefetchTask() => Icons.refresh,
+                FilesDownloadTask() => Icons.download,
+              },
+              progress: progress.data,
+            ),
     );
   }
 }

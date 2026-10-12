@@ -13,6 +13,7 @@ import 'package:neon_framework/src/utils/account_client_extension.dart';
 import 'package:neon_framework/src/utils/image_utils.dart';
 import 'package:neon_framework/src/utils/provider.dart';
 import 'package:neon_framework/src/utils/request_manager.dart';
+import 'package:neon_framework/src/widgets/circular_progress_indicator.dart';
 import 'package:neon_framework/src/widgets/error.dart';
 import 'package:neon_framework/src/widgets/linear_progress_indicator.dart';
 import 'package:nextcloud/nextcloud.dart';
@@ -171,11 +172,9 @@ class NeonImage extends StatelessWidget {
     );
   }
 
-  Widget _buildNoBlur(BuildContext context, {bool isLoading = true}) => SizedBox(
-        width: size?.width,
-        child: NeonLinearProgressIndicator(
-          visible: isLoading,
-        ),
+  Widget _buildNoBlur(BuildContext context, {bool isLoading = true}) => NeonCircularProgressIndicator(
+        iconData: Icons.preview,
+        visible: isLoading,
       );
 
   Widget _buildError(BuildContext context, Object? error) =>
