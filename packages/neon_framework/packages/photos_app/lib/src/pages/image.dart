@@ -80,12 +80,16 @@ class _ImagePageState extends State<ImagePage> {
   Widget build(BuildContext context) {
     final bloc = NeonProvider.of<FilesBloc>(context);
     final options = NeonProvider.of<PhotosOptions>(context);
+    final details = FileDetails.fromWebDav(file: _files[_imageKey.index]);
 
     return Scaffold(
       appBar: _showAppBar
           ? AppBar(
               title: Text(_files[_imageKey.index].name),
-              actions: [FileActions(details: FileDetails.fromWebDav(file: _files[_imageKey.index]))],
+              actions: [
+                FavoriteIconButton(bloc: bloc, details: details),
+                FileActions(details: details),
+              ],
             )
           : null,
       body: GestureDetector(

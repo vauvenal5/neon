@@ -34,21 +34,6 @@ class FilePreview extends StatelessWidget {
       ),
     );
 
-    if (details.isFavorite ?? false) {
-      icon = Stack(
-        children: [
-          icon,
-          Align(
-            alignment: Alignment.topRight,
-            child: Icon(
-              AdaptiveIcons.star,
-              color: Colors.yellow,
-            ),
-          ),
-        ],
-      );
-    }
-
     return SizedBox.fromSize(
       size: size,
       child: icon,
