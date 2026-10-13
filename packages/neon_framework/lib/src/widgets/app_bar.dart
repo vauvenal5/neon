@@ -6,6 +6,7 @@ import 'package:neon_framework/blocs.dart';
 import 'package:neon_framework/l10n/localizations.dart';
 import 'package:neon_framework/models.dart';
 import 'package:neon_framework/src/blocs/unified_search.dart';
+import 'package:neon_framework/src/theme/theme.dart';
 import 'package:neon_framework/src/utils/global_options.dart' as global_options;
 import 'package:neon_framework/src/utils/launch_url.dart';
 import 'package:neon_framework/src/utils/provider.dart';
@@ -14,6 +15,7 @@ import 'package:neon_framework/src/widgets/app_bar_controller.dart';
 import 'package:neon_framework/src/widgets/multi_select.dart';
 import 'package:neon_framework/src/widgets/popup_menu_button.dart';
 import 'package:neon_framework/src/widgets/unified_search_results.dart';
+import 'package:neon_framework/theme.dart';
 import 'package:rxdart/rxdart.dart';
 
 /// Global app bar for the Neon app.
@@ -88,15 +90,35 @@ class _NeonAppBarState extends State<NeonAppBar> {
           );
         }
 
+        final branding = NeonProvider.of<AppTheme>(context).neonTheme.branding;
+
         return AppBar(
-          centerTitle: widget.title == null,
-          title: widget.title != null ? Text(widget.title!) : _buildSearchAnchor(context),
+          centerTitle: !branding.nameInsteadOfSearchBar && widget.title == null,
+          title: _buildTitle(context, branding),
           actions: const [
             AccountSwitcherButton(),
           ],
         );
       },
     );
+  }
+
+  Widget _buildTitle(BuildContext context, Branding branding) {
+    if (widget.title != null) {
+      return Text(widget.title!);
+    }
+
+    if (branding.nameInsteadOfSearchBar) {
+      return Row(
+        children: [
+          SizedBox.square(dimension: kToolbarHeight, child: branding.logo),
+          const SizedBox(width: 8),
+          Text(branding.name),
+        ],
+      );
+    }
+
+    return _buildSearchAnchor(context);
   }
 
   Widget _buildSelectionPopupMenu(BuildContext context, NeonMultiSelectSession selection) {
