@@ -32,15 +32,17 @@ import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
-/// Runs Neon with the given [appImplementations].
+/// Runs Neon with registered apps and their runtime-only dependencies from [appImplementations].
 ///
+/// Dependencies contribute providers, options, settings, and localizations but do not participate in server app
+/// discovery or app navigation. Duplicate IDs are combined by [AppImplementations.allAppImplementations].
 /// Optionally provide a [theme] to set the default style.
 Future<void> runNeon({
-  required BuiltSet<AppImplementation> appImplementations,
+  required AppImplementations appImplementations,
   required NeonTheme theme,
   http.Client? httpClient,
 }) async {
-  assert(appImplementations.isNotEmpty, 'At least one AppImplementation required');
+  assert(appImplementations.registeredAppImplementations.isNotEmpty, 'At least one AppImplementation required');
 
   if (kDebugMode) {
     Logger.root.level = Level.ALL;
@@ -111,7 +113,7 @@ Future<void> runNeon({
   }
 
   final accountsBloc = AccountsBloc(
-    allAppImplementations: appImplementations,
+    appImplementations: appImplementations,
     accountRepository: accountRepository,
   );
 
@@ -132,11 +134,11 @@ Future<void> runNeon({
         NeonProvider<FirstLaunchBloc>.value(value: firstLaunchBloc),
         NeonProvider<NextPushBloc>.value(value: nextPushBloc),
         NeonProvider<BlurBloc>.value(value: blurBloc),
-        Provider<BuiltSet<AppImplementation>>(
+        Provider<AppImplementations>(
           create: (_) => appImplementations,
-          dispose: (_, appImplementations) => appImplementations.disposeAll(),
+          dispose: (_, appImplementations) => appImplementations.allAppImplementations.disposeAll(),
         ),
-        for (final appImplementation in appImplementations) appImplementation.optionsProvider,
+        for (final appImplementation in appImplementations.allAppImplementations) appImplementation.optionsProvider,
         Provider<PackageInfo>.value(value: packageInfo),
       ],
       child: NeonApp(neonTheme: theme),

@@ -9,13 +9,15 @@ import 'package:notifications_app/notifications_app.dart';
 import 'package:photos_app/photos_app.dart';
 import 'package:talk_app/talk_app.dart';
 
-/// The collection of clients enabled for the Neon app.
-final BuiltSet<AppImplementation> appImplementations = BuiltSet({
-  DashboardApp(),
-  FilesApp(),
-  NewsApp(),
-  NotesApp(),
-  NotificationsApp(),
-  PhotosApp(),
-  if (kDebugMode) TalkApp(),
-});
+/// Registered and runtime-only implementations used by the standalone Photos example.
+final appImplementations = AppImplementations(
+  registeredAppImplementations: BuiltSet<AppImplementation>({
+    DashboardApp(),
+    FilesApp(),
+    NewsApp(),
+    NotesApp(),
+    NotificationsApp(),
+    PhotosApp(),
+    if (kDebugMode) TalkApp(),
+  }),
+);

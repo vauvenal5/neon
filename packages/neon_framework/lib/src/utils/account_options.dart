@@ -14,7 +14,7 @@ import 'package:neon_framework/storage.dart';
 @immutable
 class AccountOptions extends OptionsCollection implements AccountOptionsResolver {
   /// Creates all option collections scoped to [account].
-  AccountOptions({required this.account, required BuiltSet<AppImplementation> appImplementations})
+  AccountOptions({required this.account, required Iterable<AppImplementation> appImplementations})
       : super(NeonStorage().settingsStore(StorageKeys.accountOptions, account.id)) {
     // Build app options here so one per-account owner controls their storage and lifecycle.
     for (final app in appImplementations) {
