@@ -16,6 +16,7 @@ class Branding {
     this.issueTrackerURL,
     this.legalese,
     this.showLoginWithNextcloud = true,
+    this.nameInsteadOfSearchBar = false,
   });
 
   /// App name
@@ -23,6 +24,9 @@ class Branding {
 
   /// Logo of the app shown on various places in the app.
   final Widget logo;
+
+  /// If set to true, the app name will be used as the title of the app bar instead of a search bar.
+  final bool nameInsteadOfSearchBar;
 
   /// The URL where the source code can be seen
   final String? sourceCodeURL;
