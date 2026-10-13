@@ -167,7 +167,7 @@ void main() {
       capabilitiesSubject: capabilitiesSubject,
       account: account,
       accountOptions: accountOptions,
-      allAppImplementations: allAppImplementation,
+      allAppImplementations: AppImplementations(registeredAppImplementations: allAppImplementation),
     );
 
     expect(
@@ -194,7 +194,7 @@ void main() {
         capabilitiesSubject: capabilitiesSubject,
         account: account,
         accountOptions: accountOptions,
-        allAppImplementations: allAppImplementation,
+        allAppImplementations: AppImplementations(registeredAppImplementations: allAppImplementation),
       );
 
       expect(
@@ -232,7 +232,7 @@ void main() {
         capabilitiesSubject: capabilitiesSubject,
         account: account,
         accountOptions: accountOptions,
-        allAppImplementations: allAppImplementation,
+        allAppImplementations: AppImplementations(registeredAppImplementations: allAppImplementation),
       );
 
       expect(
@@ -270,7 +270,7 @@ void main() {
         capabilitiesSubject: capabilitiesSubject,
         account: account,
         accountOptions: accountOptions,
-        allAppImplementations: allAppImplementation,
+        allAppImplementations: AppImplementations(registeredAppImplementations: allAppImplementation),
       );
 
       expect(
@@ -309,7 +309,7 @@ void main() {
       capabilitiesSubject: capabilitiesSubject,
       account: account,
       accountOptions: accountOptions,
-      allAppImplementations: allAppImplementation,
+      allAppImplementations: AppImplementations(registeredAppImplementations: allAppImplementation),
     );
 
     expect(
@@ -364,7 +364,7 @@ void main() {
       capabilitiesSubject: capabilitiesSubject,
       account: account,
       accountOptions: accountOptions,
-      allAppImplementations: allAppImplementation,
+      allAppImplementations: AppImplementations(registeredAppImplementations: allAppImplementation),
     );
 
     expect(

@@ -28,7 +28,7 @@ abstract class AppsBloc implements InteractiveBloc {
     required BehaviorSubject<Result<core.OcsGetCapabilitiesResponseApplicationJson_Ocs_Data>> capabilitiesSubject,
     required Account account,
     required AccountOptions accountOptions,
-    required BuiltSet<AppImplementation> allAppImplementations,
+    required AppImplementations allAppImplementations,
   }) = _AppsBloc;
 
   /// Sets the active app using the [appID].
@@ -54,10 +54,10 @@ abstract class AppsBloc implements InteractiveBloc {
   /// If no bloc exists yet a new one will be instantiated and cached in [AppImplementation.blocsCache].
   T getAppBloc<T extends Bloc>(AppImplementation<T, dynamic> appImplementation);
 
-  /// Returns the active [Bloc] for every registered [AppImplementation] wrapped in a Provider.
+  /// Returns providers for registered implementations and their runtime dependencies.
   List<Provider<Bloc>> get appBlocProviders;
 
-  /// Returns a handler for a given [AppCapability] if any of the active [AppImplementation]s provides one.
+  /// Returns a handler for a given [AppCapability] if an active app or runtime dependency provides one.
   /// Current implementation will pick first available handler. Multiple handler for same [AppCapability] are not yet supported.
   AppCapabilityHandler? findAppCapabilityHandler(AppCapability capability);
 }
@@ -110,7 +110,7 @@ class _AppsBloc extends InteractiveBloc implements AppsBloc {
     final appImplementationsBuilder = SetBuilder<AppImplementation>();
     if (appsResult != null && appsResult.hasData) {
       for (final entry in appsResult.requireData) {
-        for (final app in allAppImplementations) {
+        for (final app in allAppImplementations.registeredAppImplementations) {
           if (app.id == entry.id || (app.additionalMatchingIDs?.contains(entry.id) ?? false)) {
             appImplementationsBuilder.add(app);
             break;
@@ -123,7 +123,8 @@ class _AppsBloc extends InteractiveBloc implements AppsBloc {
       final notificationsCapabilities =
           capabilitiesResult.requireData.capabilities.notificationsCapabilities?.notifications;
       if (notificationsCapabilities != null) {
-        final notificationsApp = allAppImplementations.firstWhereOrNull((a) => a.id == notifications.appID);
+        final notificationsApp =
+            allAppImplementations.registeredAppImplementations.firstWhereOrNull((a) => a.id == notifications.appID);
         if (notificationsApp != null) {
           appImplementationsBuilder.add(notificationsApp);
         }
@@ -145,7 +146,7 @@ class _AppsBloc extends InteractiveBloc implements AppsBloc {
 
     // dispose unsupported apps
     if (appImplementations.hasValue && appImplementations.value.hasSuccessfulData) {
-      for (final app in allAppImplementations) {
+      for (final app in allAppImplementations.registeredAppImplementations) {
         if (appImplementations.value.data?.tryFind(app.id) == null) {
           app.blocsCache.remove(account);
         }
@@ -226,7 +227,7 @@ class _AppsBloc extends InteractiveBloc implements AppsBloc {
       capabilitiesSubscription;
   final Account account;
   final AccountOptions accountOptions;
-  final BuiltSet<AppImplementation> allAppImplementations;
+  final AppImplementations allAppImplementations;
   final apps = BehaviorSubject<Result<BuiltList<core.NavigationEntry>>>();
 
   @override
@@ -288,12 +289,16 @@ class _AppsBloc extends InteractiveBloc implements AppsBloc {
 
   @override
   List<Provider<Bloc>> get appBlocProviders =>
-      allAppImplementations.map((appImplementation) => appImplementation.blocProvider).toList();
+      allAppImplementations.allAppImplementations.map((appImplementation) => appImplementation.blocProvider).toList();
   // coverage:ignore-end
 
   @override
-  AppCapabilityHandler? findAppCapabilityHandler(AppCapability capability) => appImplementations.valueOrNull?.data
-      ?.map((app) => app.appCapabilityHandler(capability))
-      .whereNot((handler) => handler == null)
-      .firstOrNull;
+  AppCapabilityHandler? findAppCapabilityHandler(AppCapability capability) {
+    final activeApps = appImplementations.valueOrNull?.data ?? BuiltSet<AppImplementation>();
+
+    return [...activeApps, ...allAppImplementations.dependencyApps]
+        .map((app) => app.appCapabilityHandler(capability))
+        .whereNot((handler) => handler == null)
+        .firstOrNull;
+  }
 }

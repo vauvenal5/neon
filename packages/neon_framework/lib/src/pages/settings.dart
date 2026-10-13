@@ -82,7 +82,7 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final globalOptions = NeonProvider.of<GlobalOptions>(context);
     final accountsBloc = NeonProvider.of<AccountsBloc>(context);
-    final appImplementations = NeonProvider.of<BuiltSet<AppImplementation>>(context);
+    final appImplementations = NeonProvider.of<AppImplementations>(context).allAppImplementations;
     final accountOptions = NeonProvider.of<AccountOptionsResolver>(context);
     final branding = Branding.of(context);
 
@@ -402,13 +402,13 @@ class SettingsPage extends StatelessWidget {
   SettingsExportHelper _buildSettingsExportHelper(BuildContext context) {
     final globalOptions = NeonProvider.of<GlobalOptions>(context);
     final accountsBloc = NeonProvider.of<AccountsBloc>(context);
-    final appImplementations = NeonProvider.of<BuiltSet<AppImplementation>>(context);
+    final appImplementations = NeonProvider.of<AppImplementations>(context).allAppImplementations;
 
     return SettingsExportHelper(
       exportables: {
         globalOptions,
         AccountsBlocExporter(accountsBloc),
-        AppImplementationsExporter(appImplementations),
+        AppImplementationsExporter(BuiltSet<AppImplementation>(appImplementations)),
       },
     );
   }

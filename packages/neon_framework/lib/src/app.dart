@@ -56,7 +56,7 @@ class NeonApp extends StatefulWidget {
 class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowListener {
   final _appRegex = RegExp(r'^([a-z]+)_app$', multiLine: true);
   final _navigatorKey = GlobalKey<NavigatorState>();
-  late final BuiltSet<AppImplementation> _appImplementations;
+  late final AppImplementations _appImplementations;
   late final GlobalOptions _globalOptions;
   late final AccountsBloc _accountsBloc;
   late final StreamSubscription<BuiltList<Account>> _accountsSubscription;
@@ -70,7 +70,7 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
   void initState() {
     super.initState();
 
-    _appImplementations = NeonProvider.of<BuiltSet<AppImplementation>>(context);
+    _appImplementations = NeonProvider.of<AppImplementations>(context);
     _globalOptions = NeonProvider.of<GlobalOptions>(context);
     _accountsBloc = NeonProvider.of<AccountsBloc>(context);
     _accountsSubscription = _accountsBloc.accounts.listen((_) => _updateGlobalAccountOptions());
@@ -89,7 +89,7 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
       if (NeonPlatform.instance.canUseQuickActions) {
         const quickActions = QuickActions();
         await quickActions.setShortcutItems(
-          _appImplementations
+          _appImplementations.registeredAppImplementations
               .map(
                 (app) => ShortcutItem(
                   type: '${app.id}_app',
@@ -117,7 +117,7 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
             return;
           }
 
-          final allAppImplementations = NeonProvider.of<BuiltSet<AppImplementation>>(context);
+          final allAppImplementations = NeonProvider.of<AppImplementations>(context).registeredAppImplementations;
           final app = allAppImplementations.tryFind(notifications.appID) as NotificationsAppInterface?;
 
           if (app == null) {
@@ -133,7 +133,7 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
           }
           _accountsBloc.setActiveAccount(account);
 
-          final allAppImplementations = NeonProvider.of<BuiltSet<AppImplementation>>(context);
+          final allAppImplementations = NeonProvider.of<AppImplementations>(context).registeredAppImplementations;
 
           final notificationsApp = allAppImplementations.tryFind(notifications.appID) as NotificationsAppInterface?;
           if (notificationsApp != null) {
@@ -238,7 +238,7 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
                   deviceThemeLight: deviceThemeLight,
                   deviceThemeDark: deviceThemeDark,
                   oledAsDark: options.themeOLEDAsDark.value,
-                  appThemes: _appImplementations.map((a) => a.theme).nonNulls,
+                  appThemes: _appImplementations.registeredAppImplementations.map((a) => a.theme).nonNulls,
                   neonTheme: widget.neonTheme,
                 );
 
@@ -248,11 +248,14 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
                   child: MaterialApp.router(
                     debugShowCheckedModeBanner: false,
                     localizationsDelegates: [
-                      ..._appImplementations.map((app) => app.localizationsDelegate),
+                      // Dependency localizations are needed when their options appear in settings.
+                      ..._appImplementations.allAppImplementations.map((app) => app.localizationsDelegate),
                       ...NeonLocalizations.localizationsDelegates,
                     ],
                     supportedLocales: {
-                      ..._appImplementations.map((app) => app.supportedLocales).expand((element) => element),
+                      ..._appImplementations.allAppImplementations
+                          .map((app) => app.supportedLocales)
+                          .expand((element) => element),
                       ...NeonLocalizations.supportedLocales,
                     },
                     themeMode: options.themeMode.value,

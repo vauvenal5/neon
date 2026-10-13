@@ -19,7 +19,7 @@ import 'package:rxdart/rxdart.dart';
 abstract interface class AccountsBloc implements Disposable {
   @internal
   factory AccountsBloc({
-    required BuiltSet<AppImplementation> allAppImplementations,
+    required AppImplementations appImplementations,
     required AccountRepository accountRepository,
   }) = _AccountsBloc;
 
@@ -89,7 +89,7 @@ class _AccountsBloc extends Bloc implements AccountsBloc {
   /// The last state will be loaded from storage and all necessary listeners
   /// will be set up.
   _AccountsBloc({
-    required this.allAppImplementations,
+    required this.appImplementations,
     required AccountRepository accountRepository,
   }) : _accountRepository = accountRepository {
     accountRepository.accounts.listen((event) {
@@ -110,7 +110,8 @@ class _AccountsBloc extends Bloc implements AccountsBloc {
       unifiedSearchBlocs.pruneAgainst(accounts);
       weatherStatusBlocs.pruneAgainst(accounts);
       maintenanceModeBlocs.pruneAgainst(accounts);
-      for (final app in allAppImplementations) {
+      // Keep dependency-owned account blocs scoped to the same account lifecycle as registered apps.
+      for (final app in appImplementations.allAppImplementations) {
         app.blocsCache.pruneAgainst(accounts);
       }
     });
@@ -119,7 +120,7 @@ class _AccountsBloc extends Bloc implements AccountsBloc {
   @override
   final log = Logger('AccountsBloc');
 
-  final BuiltSet<AppImplementation> allAppImplementations;
+  final AppImplementations appImplementations;
   final AccountRepository _accountRepository;
 
   final accountsOptions = AccountCache<AccountOptions>();
@@ -200,7 +201,7 @@ class _AccountsBloc extends Bloc implements AccountsBloc {
   @override
   AccountOptions getOptionsFor(Account account) => accountsOptions[account] ??= AccountOptions(
         account: account,
-        appImplementations: allAppImplementations,
+        appImplementations: appImplementations.allAppImplementations,
       );
 
   @override
@@ -208,7 +209,7 @@ class _AccountsBloc extends Bloc implements AccountsBloc {
         capabilitiesSubject: getCapabilitiesBlocFor(account).capabilities,
         account: account,
         accountOptions: getOptionsFor(account),
-        allAppImplementations: allAppImplementations,
+        allAppImplementations: appImplementations,
       );
 
   @override

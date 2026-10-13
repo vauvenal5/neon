@@ -23,7 +23,7 @@ void main() {
     when(() => neonStorage.cacheStorageFor(account)).thenReturn(cacheStorage);
     when(cacheStorage.clear).thenAnswer((_) async {});
     final bloc = AccountsBloc(
-      allAppImplementations: BuiltSet<AppImplementation>(),
+      appImplementations: AppImplementations(registeredAppImplementations: BuiltSet<AppImplementation>()),
       accountRepository: repository,
     );
     addTearDown(bloc.dispose);
@@ -49,7 +49,7 @@ void main() {
     when(() => neonStorage.settingsStore(StorageKeys.accountOptions, account.id)).thenReturn(settingsStore);
     when(() => settingsStore.getString(any())).thenReturn(null);
     final bloc = AccountsBloc(
-      allAppImplementations: BuiltSet<AppImplementation>(),
+      appImplementations: AppImplementations(registeredAppImplementations: BuiltSet<AppImplementation>()),
       accountRepository: repository,
     );
     addTearDown(bloc.dispose);
