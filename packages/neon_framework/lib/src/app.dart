@@ -86,20 +86,27 @@ class _NeonAppState extends State<NeonApp> with WidgetsBindingObserver, WindowLi
       if (!mounted) {
         return;
       }
+
       if (NeonPlatform.instance.canUseQuickActions) {
         const quickActions = QuickActions();
-        await quickActions.setShortcutItems(
-          _appImplementations.registeredAppImplementations
-              .map(
-                (app) => ShortcutItem(
-                  type: '${app.id}_app',
-                  localizedTitle: app.nameFromLocalization(localizations),
-                  icon: '${app.id}_app',
-                ),
-              )
-              .toList(),
-        );
-        await quickActions.initialize(_handleShortcut);
+        // no reason to set up quick actions if there is only one app implementation, as the user can just open the app normally.
+        if (_appImplementations.registeredAppImplementations.length > 1) {
+          await quickActions.setShortcutItems(
+            _appImplementations.registeredAppImplementations
+                .map(
+                  (app) =>
+                  ShortcutItem(
+                    type: '${app.id}_app',
+                    localizedTitle: app.nameFromLocalization(localizations),
+                    icon: '${app.id}_app',
+                  ),
+            )
+                .toList(),
+          );
+          await quickActions.initialize(_handleShortcut);
+        } else {
+          await quickActions.clearShortcutItems();
+        }
       }
 
       if (NeonPlatform.instance.canUseWindowManager) {
