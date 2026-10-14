@@ -9,7 +9,6 @@ import 'package:files_app/src/widgets/favorite_icon_button.dart';
 import 'package:files_app/src/widgets/file_preview.dart';
 import 'package:filesize/filesize.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:neon_framework/theme.dart';
 import 'package:neon_framework/utils.dart';
 import 'package:neon_framework/widgets.dart';
@@ -111,11 +110,12 @@ class FileListTile extends StatelessWidget {
             onChanged: onSelect == null ? null : (_) => onSelect!(),
           )
         else
-          StreamBuilder(
-            stream: bloc.downloadTasks.where((task) => task != null && task.uri == details.uri),
-            initialData: bloc.getTask(details.uri),
-            builder: _buildFileActions,
-          ),
+          if (FilesBrowserMode.browser == browserBloc.mode)
+            StreamBuilder(
+              stream: bloc.downloadTasks.where((task) => task != null && task.uri == details.uri),
+              initialData: bloc.getTask(details.uri),
+              builder: _buildFileActions,
+            ),
       ],
     );
   }
