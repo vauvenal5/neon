@@ -65,19 +65,19 @@ class _NotesMainPageState extends State<NotesMainPage> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: index,
-        onTap: (index) {
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: index,
+        onDestinationSelected: (index) {
           setState(() {
             this.index = index;
           });
         },
-        items: [
-          BottomNavigationBarItem(
+        destinations: [
+          NavigationDestination(
             icon: const Icon(Icons.note),
             label: NotesLocalizations.of(context).notes,
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(AdaptiveIcons.tag),
             label: NotesLocalizations.of(context).categories,
           ),
