@@ -29,7 +29,7 @@ sealed class FilesBrowserBloc implements InteractiveBloc {
     required webdav.PathUri uri,
     required FilesBrowserMode mode,
     required MimeFilter mimeFilter,
-    webdav.PathUri? hideUri,
+    Set<webdav.PathUri>? hideUris,
     bool recursive,
   }) = _FilesBrowserBloc;
 
@@ -47,9 +47,9 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
     required this.uri,
     required this.mode,
     required this.mimeFilter,
-    this.hideUri,
+    Set<webdav.PathUri>? hideUris,
     this.recursive = false,
-  }) {
+  }) : hideUris = hideUris ?? const {} {
     options.showHiddenFilesOption.addListener(refresh);
 
     updatesSubscription = filesBloc.updates.listen((_) async => refresh());
@@ -68,7 +68,7 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
   final webdav.PathUri uri;
   @override
   final FilesBrowserMode mode;
-  final webdav.PathUri? hideUri;
+  final Set<webdav.PathUri> hideUris;
   final bool recursive;
 
   @override
@@ -114,7 +114,8 @@ class _FilesBrowserBloc extends InteractiveBloc implements FilesBrowserBloc {
           }
 
           // Do not show the original directory when selecting a directory
-          if (mode == FilesBrowserMode.selectDirectory && hideUri == file.path) {
+          // Keep selected folders out of their own bulk move/copy destinations.
+          if (mode == FilesBrowserMode.selectDirectory && hideUris.contains(file.path)) {
             continue;
           }
 

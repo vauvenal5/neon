@@ -230,7 +230,7 @@ class FilesChooseFolderDialog extends StatefulWidget {
   const FilesChooseFolderDialog({
     required this.bloc,
     required this.uri,
-    this.hideUri,
+    this.hideUris = const {},
     super.key,
   });
 
@@ -238,7 +238,7 @@ class FilesChooseFolderDialog extends StatefulWidget {
 
   final webdav.PathUri uri;
 
-  final webdav.PathUri? hideUri;
+  final Set<webdav.PathUri> hideUris;
 
   @override
   State<FilesChooseFolderDialog> createState() => _FilesChooseFolderDialogState();
@@ -289,7 +289,7 @@ class _FilesChooseFolderDialogState extends State<FilesChooseFolderDialog> {
                 this.uri = uri;
               });
             },
-            hideUri: widget.hideUri,
+            hideUris: widget.hideUris,
           ),
         ),
       ),

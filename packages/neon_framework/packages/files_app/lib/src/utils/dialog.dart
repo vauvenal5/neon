@@ -66,38 +66,36 @@ Future<bool> showUploadConfirmationDialog(
     ) ??
     false;
 
-/// Displays a [FilesChooseFolderDialog] to choose a new location for a file with the given [details].
+/// Displays a [FilesChooseFolderDialog] to choose a new location for a file(s) with the given [parentUri].
 ///
 /// Returns a future with the new location.
-Future<webdav.PathUri?> showChooseFolderDialog(BuildContext context, FileDetails details) async {
+Future<webdav.PathUri?> showChooseFolderDialog(
+  BuildContext context, {
+  required webdav.PathUri parentUri,
+  required Set<webdav.PathUri> hideUris
+}) async {
   final filesBloc = NeonProvider.of<FilesBloc>(context);
 
-  final result = await showDialog<webdav.PathUri>(
+  return showDialog<webdav.PathUri>(
     context: context,
     builder: (context) => FilesChooseFolderDialog(
       bloc: filesBloc,
-      uri: details.uri.parent!,
-      hideUri: details.uri,
+      uri: parentUri,
+      hideUris: hideUris,
     ),
   );
-
-  return result;
 }
 
-/// Displays a [NeonConfirmationDialog] to confirm deleting a file or folder with the given [details].
+/// Displays a [NeonConfirmationDialog] to confirm deleting the selected files and folders.
 ///
 /// Returns a future whether the action has been accepted.
-Future<bool> showDeleteConfirmationDialog(BuildContext context, FileDetails details) async =>
+Future<bool> showBulkDeleteConfirmationDialog(BuildContext context, int count) async =>
     await showAdaptiveDialog<bool>(
       context: context,
       builder: (context) => NeonConfirmationDialog(
         title: FilesLocalizations.of(context).actionDeleteTitle,
         icon: const Icon(Icons.delete_outlined),
-        content: Text(
-          details.isDirectory
-              ? FilesLocalizations.of(context).folderDeleteConfirm(details.name)
-              : FilesLocalizations.of(context).fileDeleteConfirm(details.name),
-        ),
+        content: Text(FilesLocalizations.of(context).bulkDeleteConfirm(count)),
       ),
     ) ??
     false;

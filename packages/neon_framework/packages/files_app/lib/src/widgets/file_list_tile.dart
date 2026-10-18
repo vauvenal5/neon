@@ -21,6 +21,9 @@ class FileListTile extends StatelessWidget {
     required this.details,
     required this.setPath,
     this.checkOpenInNeon,
+    this.selectionMode = false,
+    this.isSelected = false,
+    this.onSelect,
     super.key,
   });
 
@@ -29,6 +32,9 @@ class FileListTile extends StatelessWidget {
   final FileDetails details;
   final void Function(webdav.PathUri uri) setPath;
   final Future<bool> Function()? checkOpenInNeon;
+  final bool selectionMode;
+  final bool isSelected;
+  final VoidCallback? onSelect;
 
   Future<void> _onTap(BuildContext context, FileDetails details) async {
     if (details.isDirectory) {
@@ -54,7 +60,13 @@ class FileListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       // When the ETag is null it means we are uploading this file right now
-      onTap: details.isDirectory || details.etag != null ? () async => _onTap(context, details) : null,
+      selected: selectionMode && isSelected,
+      selectedColor: Theme.of(context).colorScheme.onPrimary,
+      selectedTileColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
+      onTap: selectionMode
+          ? onSelect
+          : (details.isDirectory || details.etag != null ? () async => _onTap(context, details) : null),
+      onLongPress: onSelect,
       title: Text(
         details.name,
         overflow: TextOverflow.ellipsis,
@@ -78,104 +90,40 @@ class FileListTile extends StatelessWidget {
           ],
         ],
       ),
-      leading: _FileIcon(
+      leading: FilePreview(
         details: details,
         bloc: bloc,
       ),
-      trailing: StreamBuilder(
-        stream: bloc.downloadTasks.where((task) => task != null && task.uri == details.uri),
-        initialData: bloc.getTask(details.uri),
-        builder: _buildTrailing,
-      ),
+      trailing: selectionMode
+          ? Checkbox(value: isSelected, shape: const CircleBorder(), onChanged: onSelect == null ? null : (_) => onSelect!())
+          : StreamBuilder(
+              stream: bloc.downloadTasks.where((task) => task != null && task.uri == details.uri),
+              initialData: bloc.getTask(details.uri),
+              builder: _buildTrailing,
+            ),
     );
   }
 
   Widget _buildTrailing(BuildContext context, AsyncSnapshot<FilesTask?> task) {
-    const empty = SizedBox.square(dimension: largeIconSize,);
+    const empty = SizedBox.square(dimension: largeIconSize);
 
-    if(FilesBrowserMode.browser == browserBloc.mode) {
-      if(task.hasData) {
+    if (FilesBrowserMode.browser == browserBloc.mode) {
+      if (task.hasData) {
         return StreamBuilder(
           stream: task.data!.progress,
-          builder: (context, progress) => progress.hasData && progress.data == 1.0 ? FileActions(details: details,) : empty,
+          builder: (context, progress) => progress.hasData && progress.data == 1.0
+              ? FileActions(
+                  details: details,
+                )
+              : empty,
         );
       }
 
-      return FileActions(details: details,);
-    }
-
-    return empty;
-  }
-}
-
-class _FileIcon extends StatelessWidget {
-  const _FileIcon({
-    required this.details,
-    required this.bloc,
-  });
-
-  final FileDetails details;
-  final FilesBloc bloc;
-
-  @override
-  Widget build(BuildContext context) {
-    Widget icon = Center(
-      child: StreamBuilder(
-        stream: bloc.downloadTasks.where((task) => task != null && task.uri == details.uri), 
-        initialData: bloc.getTask(details.uri),
-        builder: (context, task) {
-          return task.hasData ? _buildProgressIndicator(context, task.data!) : _buildPreview();
-        },
-      ),
-    );
-
-    if (details.isFavorite ?? false) {
-      icon = Stack(
-        children: [
-          icon,
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Icon(
-              AdaptiveIcons.star,
-              size: smallIconSize,
-              color: Colors.yellow,
-            ),
-          ),
-        ],
+      return FileActions(
+        details: details,
       );
     }
 
-    return SizedBox.square(
-      dimension: largeIconSize,
-      child: icon,
-    );
-  }
-
-  Widget _buildPreview() {
-    return FilePreview(
-      bloc: bloc,
-      details: details,
-    );
-  }
-
-  Widget _buildProgressIndicator(BuildContext context, FilesTask task) {
-    return StreamBuilder(
-      stream: task.progress,
-      builder: (context, progress) => progress.hasData && progress.data == 1.0 ? _buildPreview() : Column(
-        children: [
-          Icon(
-            switch (task) {
-              FilesUploadTask() => MdiIcons.upload,
-              FilesRefetchTask() => MdiIcons.refresh,
-              FilesDownloadTask() => MdiIcons.download,
-            },
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          LinearProgressIndicator(
-            value: progress.data,
-          ),
-        ],
-      ),
-    );
+    return empty;
   }
 }
