@@ -82,7 +82,7 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final globalOptions = NeonProvider.of<GlobalOptions>(context);
     final accountsBloc = NeonProvider.of<AccountsBloc>(context);
-    final appImplementations = NeonProvider.of<AppImplementations>(context).allAppImplementations;
+    final appImplementations = NeonProvider.of<AppImplementations>(context);
     final accountOptions = NeonProvider.of<AccountOptionsResolver>(context);
     final branding = Branding.of(context);
 
@@ -105,7 +105,7 @@ class SettingsPage extends StatelessWidget {
             if (decision ?? false) {
               globalOptions.reset();
 
-              for (final appImplementation in appImplementations) {
+              for (final appImplementation in appImplementations.allAppImplementations) {
                 appImplementation.options.reset();
               }
 
@@ -127,7 +127,7 @@ class SettingsPage extends StatelessWidget {
           title: Text(NeonLocalizations.of(context).settingsApps),
           key: ValueKey(SettingsCategories.apps.name),
           tiles: <SettingsTile>[
-            for (final appImplementation in appImplementations)
+            for (final appImplementation in appImplementations.allAppImplementations)
               // Keep apps discoverable when they expose only account-specific settings.
               if (appImplementation.options.options.isNotEmpty ||
                   (accountOptions.getAppAccountOptions(appImplementation)?.options.isNotEmpty ?? false))
@@ -158,16 +158,20 @@ class SettingsPage extends StatelessWidget {
             ),
           ],
         ),
-        SettingsCategory(
-          title: Text(NeonLocalizations.of(context).optionsCategoryNavigation),
-          key: ValueKey(SettingsCategories.navigation.name),
-          tiles: [
-            SelectSettingsTile(
-              option: globalOptions.navigationMode,
-            ),
-          ],
-        ),
-        if (NeonPlatform.instance.canUsePushNotifications) buildNotificationsCategory(context),
+        // Navigation mode only matters when multiple registered apps can appear in the drawer.
+        if (appImplementations.registeredAppImplementations.length > 1)
+          SettingsCategory(
+            title: Text(NeonLocalizations.of(context).optionsCategoryNavigation),
+            key: ValueKey(SettingsCategories.navigation.name),
+            tiles: [
+              SelectSettingsTile(
+                option: globalOptions.navigationMode,
+              ),
+            ],
+          ),
+        if (NeonPlatform.instance.canUsePushNotifications &&
+            globalOptions.pushNotificationsDistributor.values.length > 1)
+          buildNotificationsCategory(context),
         if (NeonPlatform.instance.canUseWindowManager)
           SettingsCategory(
             title: Text(NeonLocalizations.of(context).optionsCategoryStartup),
@@ -232,7 +236,7 @@ class SettingsPage extends StatelessWidget {
               ),
               title: Text(NeonLocalizations.of(context).settingsExport),
               onTap: () async {
-                final settingsExportHelper = _buildSettingsExportHelper(context);
+                final settingsExportHelper = _buildSettingsExportHelper(context, appImplementations);
 
                 try {
                   final fileName = 'nextcloud-neon-settings-${tz.TZDateTime.now(tz.UTC).secondsSinceEpoch}.json';
@@ -259,7 +263,7 @@ class SettingsPage extends StatelessWidget {
               ),
               title: Text(NeonLocalizations.of(context).settingsImport),
               onTap: () async {
-                final settingsExportHelper = _buildSettingsExportHelper(context);
+                final settingsExportHelper = _buildSettingsExportHelper(context, appImplementations);
 
                 try {
                   final result = await FilePicker.platform.pickFiles(
@@ -399,16 +403,15 @@ class SettingsPage extends StatelessWidget {
     }
   }
 
-  SettingsExportHelper _buildSettingsExportHelper(BuildContext context) {
+  SettingsExportHelper _buildSettingsExportHelper(BuildContext context, AppImplementations appImplementations) {
     final globalOptions = NeonProvider.of<GlobalOptions>(context);
     final accountsBloc = NeonProvider.of<AccountsBloc>(context);
-    final appImplementations = NeonProvider.of<AppImplementations>(context).allAppImplementations;
 
     return SettingsExportHelper(
       exportables: {
         globalOptions,
         AccountsBlocExporter(accountsBloc),
-        AppImplementationsExporter(BuiltSet<AppImplementation>(appImplementations)),
+        AppImplementationsExporter(BuiltSet<AppImplementation>(appImplementations.allAppImplementations)),
       },
     );
   }
