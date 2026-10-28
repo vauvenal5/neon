@@ -137,7 +137,9 @@ class _ServerUrlFieldState extends State<_ServerUrlField> {
 
   void login(String url) {
     if (_formKey.currentState!.validate()) {
-      final uri = Uri.parse(url);
+      // Match validation by defaulting scheme-less server addresses to HTTPS.
+      final parsedInput = Uri.parse(url);
+      final uri = parsedInput.hasScheme ? parsedInput : Uri.parse('https://$url');
 
       context.read<LoginBloc>().add(LoginUrlEntered(uri));
     } else {
@@ -162,7 +164,7 @@ class _ServerUrlFieldState extends State<_ServerUrlField> {
           ),
         ),
         keyboardType: TextInputType.url,
-        validator: (input) => validateHttpUrl(context, input),
+        validator: (input) => validateHttpUrl(context, input, autoHttps: true),
         onFieldSubmitted: login,
         autofillHints: const [
           AutofillHints.url,
