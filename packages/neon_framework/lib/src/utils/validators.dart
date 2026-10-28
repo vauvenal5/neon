@@ -4,16 +4,22 @@ import 'package:neon_framework/l10n/localizations.dart';
 /// Validates whether the given [input] is a valid HTTP(S) URL.
 ///
 /// Set [httpsOnly] if you want to only allow HTTPS URLs.
+/// Set [autoHttps] if you want to treat scheme-less URLs as HTTPS URLs.
 /// Returns `null` if the URL is valid or a localized error message if not.
 String? validateHttpUrl(
   BuildContext context,
   String? input, {
   bool httpsOnly = false,
+  bool autoHttps = false,
 }) {
   if (input == null || input.isEmpty) {
     return NeonLocalizations.of(context).errorInvalidURL;
   }
-  final uri = Uri.tryParse(input);
+  final parsedInput = Uri.tryParse(input);
+  // Treat a server address without a scheme as HTTPS so users can enter a bare host.
+  final uri = autoHttps && parsedInput != null && !parsedInput.hasScheme
+      ? Uri.tryParse('https://$input')
+      : parsedInput;
 
   if (uri != null) {
     if (uri.isScheme('https')) {
