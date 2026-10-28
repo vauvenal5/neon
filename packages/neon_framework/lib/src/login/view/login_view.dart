@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:neon_framework/l10n/localizations.dart';
@@ -31,27 +33,32 @@ class LoginView extends StatelessWidget {
         AppBar? appBar;
         if (state is! LoginStateInitial || Navigator.canPop(context)) {
           appBar = AppBar(
-            leading: const CloseButton(),
+            leading: CloseButton(
+              onPressed: () => _onBackButtonPressed(context),
+            ),
           );
         }
 
-        return Scaffold(
-          resizeToAvoidBottomInset: true,
-          appBar: appBar,
-          body: SafeArea(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: ConstrainedBox(
-                  constraints: NeonDialogTheme.of(context).constraints,
-                  child: switch (state) {
-                    LoginStateInitial() => const _LoginSelection(key: Key('login-selection')),
-                    LoginStateScanQrCode() => const LoginQrCodePage(),
-                    LoginStateCheckServer(:final serverURL) => LoginCheckServerPage(serverURL: serverURL),
-                    LoginStateFlowV2(:final serverURL) => LoginFLowV2Page(serverURL: serverURL),
-                    LoginStateCheckAccount(:final credentials) => LoginCheckAccountPage(credentials: credentials),
-                    LoginStateDone() => const SizedBox(),
-                  },
+        return BackButtonListener(
+          onBackButtonPressed: () => _onBackButtonPressed(context),
+          child: Scaffold(
+            resizeToAvoidBottomInset: true,
+            appBar: appBar,
+            body: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: ConstrainedBox(
+                    constraints: NeonDialogTheme.of(context).constraints,
+                    child: switch (state) {
+                      LoginStateInitial() => const _LoginSelection(key: Key('login-selection')),
+                      LoginStateScanQrCode() => const LoginQrCodePage(),
+                      LoginStateCheckServer(:final serverURL) => LoginCheckServerPage(serverURL: serverURL),
+                      LoginStateFlowV2(:final serverURL) => LoginFLowV2Page(serverURL: serverURL),
+                      LoginStateCheckAccount(:final credentials) => LoginCheckAccountPage(credentials: credentials),
+                      LoginStateDone() => const SizedBox(),
+                    },
+                  ),
                 ),
               ),
             ),
@@ -59,6 +66,15 @@ class LoginView extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<bool> _onBackButtonPressed(BuildContext context) {
+    if (Navigator.canPop(context)) {
+      return Navigator.maybePop(context);
+    } else {
+      context.read<LoginBloc>().add(const LoginCanceled());
+      return Future.value(true);
+    }
   }
 }
 

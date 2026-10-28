@@ -16,6 +16,12 @@ final class LoginUseQRCode extends LoginEvent {
   const LoginUseQRCode();
 }
 
+/// Event when the user cancels the current login stage and returns to the start.
+final class LoginCanceled extends LoginEvent {
+  /// Creates a login cancellation event.
+  const LoginCanceled();
+}
+
 /// {@template login_url_entered}
 /// Event when the server url is known and the maintenance mode and supported version should be checked.
 /// {@endtemplate}

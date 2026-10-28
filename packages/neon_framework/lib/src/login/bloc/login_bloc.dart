@@ -20,6 +20,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           ),
         ) {
     on<LoginUseQRCode>(_onLoginUseQRCode);
+    on<LoginCanceled>(_onLoginCanceled);
     on<LoginUrlEntered>(_onLoginUrlEntered);
     on<LoginServerChecked>(_onLoginServerChecked);
     on<LoginCredentialsEntered>(_onLoginCredentialsEntered);
@@ -27,6 +28,11 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   }
 
   final AccountRepository _accountRepository;
+
+  void _onLoginCanceled(LoginCanceled event, Emitter<LoginState> emit) {
+    // Rebuild the initial form so stage-specific blocs and their work are disposed.
+    emit(const LoginStateInitial());
+  }
 
   void _onLoginUseQRCode(LoginUseQRCode event, Emitter<LoginState> emit) {
     emit(const LoginStateScanQrCode());
